@@ -11,6 +11,9 @@ Description: This contains the Shiny app and the related functions.
 License: GPL-3
 URL: https://github.com/inbo/figquest
 BugReports: https://github.com/inbo/figquest/issues
+Imports: 
+    dplyr,
+    purrr
 Encoding: UTF-8
 Language: en-GB
 Roxygen: list(markdown = TRUE)
