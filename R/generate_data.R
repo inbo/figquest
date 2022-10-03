@@ -67,5 +67,9 @@ scale_data <- function(f_down = -0.75, f_up = 0.25, threshold = log(0.75)) {
         threshold = exp(c(-1, 1) * threshold), reference = 1
       )
     ) %>%
-    arrange(.data$x)
+    arrange(.data$x) -> dataset
+  attr(dataset, "threshold") <- threshold
+  attr(dataset, "f_down") <- f_down
+  attr(dataset, "f_up") <- f_up
+  return(dataset)
 }

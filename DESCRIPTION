@@ -12,12 +12,15 @@ License: GPL-3
 URL: https://github.com/inbo/figquest
 BugReports: https://github.com/inbo/figquest/issues
 Imports: 
+    INBOtheme,
     assertthat,
     dplyr,
     effectclass,
     git2rdata,
     purrr,
-    rlang
+    rlang,
+    stringr,
+    tidyr
 Encoding: UTF-8
 Language: en-GB
 Roxygen: list(markdown = TRUE)
