@@ -1,0 +1,34 @@
+{
+  "title": "figquest: A Shiny Questionaire on Trend Figures",
+  "version": "0.0.0",
+  "description": "This contains the Shiny app and the related functions.",
+  "creators": [
+    {
+      "name": "Onkelinx, Thierry",
+      "orcid": "https://orcid.org/0000-0001-8804-4216"
+    }
+  ],
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "GPL-3.0",
+  "communities": [
+    {
+      "identifier": "inbo"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Research Institute for Nature and Forest",
+      "type": "RightsHolder"
+    },
+    {
+      "name": "Onkelinx, Thierry",
+      "type": "ContactPerson",
+      "orcid": "https://orcid.org/0000-0001-8804-4216"
+    }
+  ],
+  "language": "eng",
+  "keywords": [
+    "R package"
+  ]
+}
