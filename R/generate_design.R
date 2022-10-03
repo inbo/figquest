@@ -10,6 +10,7 @@
 #' @export
 #' @importFrom dplyr ends_with inner_join mutate row_number select slice_sample
 #' @importFrom purrr map
+#' @importFrom utils combn head
 generate_design <- function(design_effect, design_data, max_question = 10) {
   design_element <- vapply(
     seq_along(design_effect), FUN.VALUE = vector(mode = "list", 1),
