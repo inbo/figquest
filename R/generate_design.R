@@ -10,6 +10,7 @@
 #' @export
 #' @importFrom dplyr ends_with inner_join mutate row_number select slice_sample
 #' @importFrom purrr map
+#' @importFrom tidyselect all_of
 #' @importFrom utils combn head
 generate_design <- function(design_effect, design_data, max_question = 10) {
   design_element <- vapply(
@@ -35,6 +36,9 @@ generate_design <- function(design_effect, design_data, max_question = 10) {
   list(id = design$id) |>
     c(design_data) |>
     expand.grid() -> combs
+  factors <- names(which(vapply(combs, is.factor, logical(1))))
+  combs %>%
+    mutate(across(all_of(factors), as.character)) -> combs
   if (nrow(combs) <= max_question) {
     combs |>
       inner_join(design, by = "id") |>
@@ -42,6 +46,9 @@ generate_design <- function(design_effect, design_data, max_question = 10) {
     return(selection)
   }
   combs_data <- expand.grid(design_data)
+  factors <- names(which(vapply(combs_data, is.factor, logical(1))))
+  combs_data %>%
+    mutate(across(all_of(factors), as.character)) -> combs_data
   sample_data <- sample(nrow(combs_data))
   while (length(sample_data) < max_question) {
     sample_data <- c(sample_data, sample(nrow(combs_data)))

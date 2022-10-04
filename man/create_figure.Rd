@@ -17,6 +17,24 @@ create_figure(
 
 \item{reference}{Which reference to show.
 Must be either \code{"lines + text"} (default), \code{"lines"} or \code{"none"}.}
+
+\item{y_label}{Defines the style of the y axis labels
+\code{"index"} generates labels as rescaled values where the reference is set to
+100.
+\code{"change"} generates labels as the relative difference to the reference.}
+
+\item{ci}{Defines the style of the confidence intervals.
+\code{"none"} hides the confidence intervals.
+\code{"band"} displays only the 90\% confidence intervals.
+\code{"gradient"} displays the 30\%, 60\% and 90\% confidence intervals.}
+
+\item{effect}{Defines the style of the classification.
+\code{"none"} hides the classification.
+\code{"symbol"} displays point with text symbols.
+\code{"colour symbol"} displays point with text symbols with different colours.
+\code{"colour ci"} colours the confidence intervals.
+\code{"symbol + colour ci"} colours the confidence intervals and displays points
+with text symbols.}
 }
 \description{
 Create a \code{ggplot2} figure

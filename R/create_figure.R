@@ -2,6 +2,21 @@
 #' @param dataset the output of `generate_data()`.
 #' @param reference Which reference to show.
 #' Must be either `"lines + text"` (default), `"lines"` or `"none"`.
+#' @param y_label Defines the style of the y axis labels
+#' `"index"` generates labels as rescaled values where the reference is set to
+#' 100.
+#' `"change"` generates labels as the relative difference to the reference.
+#' @param ci Defines the style of the confidence intervals.
+#' `"none"` hides the confidence intervals.
+#' `"band"` displays only the 90% confidence intervals.
+#' `"gradient"` displays the 30%, 60% and 90% confidence intervals.
+#' @param effect Defines the style of the classification.
+#' `"none"` hides the classification.
+#' `"symbol"` displays point with text symbols.
+#' `"colour symbol"` displays point with text symbols with different colours.
+#' `"colour ci"` colours the confidence intervals.
+#' `"symbol + colour ci"` colours the confidence intervals and displays points
+#' with text symbols`.
 #' @export
 #' @importFrom INBOtheme inbo_steun_blauw inbo_steun_donkerroos traffic_palette
 #' @importFrom dplyr %>% mutate
@@ -9,6 +24,7 @@
 #' geom_point geom_ribbon geom_text ggplot guides guide_legend
 #' scale_colour_manual scale_fill_manual scale_x_continuous scale_y_log10 theme
 #' unit
+#' @importFrom rlang .data
 #' @importFrom stats setNames
 create_figure <- function(
   dataset = generate_data(size = "strong", threshold = log(0.75)),
@@ -53,20 +69,12 @@ create_figure <- function(
         labels = interpretation_code
       )
     )
-  p <- ggplot(dataset, aes(x = x, y = mu)) +
+  p <- ggplot(dataset, aes(x = .data$x, y = .data$mu)) +
     scale_x_continuous(limits = c(2000, NA)) +
     theme(
       axis.title.x = element_blank()
     )
-  if (reference == "none") {
-    limits <- range(c(dataset$lcl_90, dataset$ucl_90))
-  } else {
-    limits <- range(
-      c(
-        dataset$lcl_90, dataset$ucl_90,
-        exp(c(-1, 1) * attr(dataset, "threshold"))
-      )
-    )
+  if (reference != "none") {
     p <- p +
       geom_hline(yintercept = 1, linetype = 2, colour = inbo_steun_donkerroos) +
       geom_hline(
@@ -110,7 +118,10 @@ create_figure <- function(
       p <- p +
         geom_ribbon(
           data = ci_data, alpha = 0.3,
-          aes(ymin = lcl_90, ymax = ucl_90, fill = effect, group = set)
+          aes(
+            ymin = .data$lcl_90, ymax = .data$ucl_90, fill = .data$effect,
+            group = .data$set
+          )
         ) +
         scale_fill_manual(
           "wijziging", values = interpretation_gradient, drop = FALSE,
@@ -126,18 +137,32 @@ create_figure <- function(
         p <- p +
           geom_ribbon(
             data = ci_data, alpha = 0.3,
-            aes(ymin = lcl_60, ymax = ucl_60, fill = effect, group = set)
+            aes(
+              ymin = .data$lcl_60, ymax = .data$ucl_60, fill = .data$effect,
+              group = .data$set
+            )
           ) +
           geom_ribbon(
             data = ci_data, alpha = 0.3,
-            aes(ymin = lcl_30, ymax = ucl_30, fill = effect, group = set)
+            aes(
+              ymin = .data$lcl_30, ymax = .data$ucl_30, fill = .data$effect,
+              group = .data$set
+            )
           )
       }
     } else {
-      p <- p + geom_ribbon(aes(ymin = lcl_90, ymax = ucl_90), alpha = 0.3)
+      p <- p +
+        geom_ribbon(
+          aes(ymin = .data$lcl_90, ymax = .data$ucl_90), alpha = 0.3
+        )
       if (ci == "gradient") {
-        p <- p + geom_ribbon(aes(ymin = lcl_60, ymax = ucl_60), alpha = 0.3) +
-          geom_ribbon(aes(ymin = lcl_30, ymax = ucl_30), alpha = 0.3)
+        p <- p +
+          geom_ribbon(
+            aes(ymin = .data$lcl_60, ymax = .data$ucl_60), alpha = 0.3
+          ) +
+          geom_ribbon(
+            aes(ymin = .data$lcl_30, ymax = .data$ucl_30), alpha = 0.3
+          )
       }
     }
   }
@@ -180,11 +205,9 @@ create_figure <- function(
 generate_ci_data <- function(dataset) {
   dataset %>%
     mutate(
-      set = lag(
-        .data$classification, default = head(.data$classification, 1)
-      ) %>%
-        `!=`(.data$classification) %>%
-        cumsum()
+      set = lag(.data$classification, default = head(.data$classification, 1)),
+      set = .data$set != .data$classification,
+      set = cumsum(.data$set)
     ) -> sets
   sets %>%
     select(-.data$classification, -.data$effect) %>%
