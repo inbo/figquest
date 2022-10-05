@@ -24,7 +24,9 @@ Imports:
     tidyr,
     tidyselect
 Suggests:
+    gistr,
     shiny
+Additional_repositories: https://inbo.r-universe.dev
 Encoding: UTF-8
 Language: en-GB
 Roxygen: list(markdown = TRUE)

@@ -3,6 +3,8 @@ library(figquest)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(gistr)
+library(git2rdata)
 
 max_question <- 10
 max_interpretation <- 4
@@ -136,10 +138,15 @@ Ditmaal in de stijl waar jouw voorkeur naar uitgaat.",
 # nolint start: cyclocomp_linter.
 server <- function(input, output, session) {
 
+  root <- tempfile(session$token)
+  dir.create(root, showWarnings = FALSE, recursive = TRUE)
+  gist_id <- "263716f8d0f10f96531a45f52ba9472a"
+
   data <- reactiveValues(
     answer = numeric(0),
     dataset = NULL,
     design = NULL,
+    interpretation = list(),
     level = 1,
     level_question = c(
 "",
@@ -397,6 +404,28 @@ interpreteren?"
       )
     )
     if (data$question == nrow(data$design)) {
+      gist(gist_id) %>%
+        gist_save(path = root)
+      data$design %>%
+        mutate(
+          answer = data$answer, session = session$token, timestamp = Sys.time()
+        ) %>%
+        select(-matches("_id$")) %>%
+        bind_rows(
+          read_vc(
+            paste0("preference_", data$level),
+            root = file.path(root, gist_id))
+        ) %>%
+        write_vc(
+          paste0("preference_", data$level), root = file.path(root, gist_id),
+          sorting = c("session", "timestamp")
+        )
+      gist(gist_id) %>%
+        update_files(
+          file.path(root, gist_id, paste0("preference_", data$level, ".tsv")),
+          file.path(root, gist_id, paste0("preference_", data$level, ".yml"))
+        ) %>%
+        update()
       data$preferred <- c(
         data$preferred, calc_preferred(data$design, data$answer)
       )
@@ -417,6 +446,42 @@ interpreteren?"
       )
       return(NULL)
     }
+    gist(gist_id) %>%
+      gist_save(path = root)
+    data.frame(
+      session = session$token, timestamp = Sys.time(),
+      math = factor(
+        input$math,
+        levels = c(
+          "niet vertrouwd", "weinig vertrouwd", "vertrouwd", "zeer vertrouwd"
+        ),
+        labels = c("not", "low", "medium", "high")
+      ),
+      stats = factor(
+        input$stats,
+        levels = c(
+          "niet vertrouwd", "weinig vertrouwd", "vertrouwd", "zeer vertrouwd"
+        ),
+        labels = c("not", "low", "medium", "high")
+      ),
+      colourblind = factor(
+        input$colourblind, levels = c("ja", "nee", "wil liever niet vertellen"),
+        labels = c("yes", "no", "no answer")
+      )
+    ) %>%
+      bind_rows(
+        read_vc("intro", file.path(root, gist_id))
+      ) %>%
+      write_vc(
+        "intro", root = file.path(root, gist_id),
+        sorting = c("session", "timestamp")
+      )
+    gist(gist_id) %>%
+      update_files(
+        file.path(root, gist_id, "intro.tsv"),
+        file.path(root, gist_id, "intro.yml")
+      ) %>%
+      update()
     data$level <- data$level + 1
   })
 
@@ -439,10 +504,62 @@ interpreteren?"
       )
       return(NULL)
     }
+    data.frame(
+      session = session$token, timestamp = Sys.time(),
+      threshold = attr(data$dataset, "threshold"),
+      f_down = attr(data$dataset, "f_down"),
+      f_up = attr(data$dataset, "f_up"),
+      flip = attr(data$dataset, "flip"),
+      direction = attr(data$dataset, "direction"),
+      size = factor(
+        data$design$size[data$question],
+        levels = c("stable", "moderate", "strong", "potential")
+      ),
+      reference = factor(
+        data$design$size[data$question],
+        levels = c("none", "lines", "lines + text")
+      ),
+      y_label = factor(
+        data$design$y_label_a[data$question], levels = c("change", "index")
+      ),
+      ci = factor(
+        data$design$ci[data$question], levels = c("none", "band", "gradient")
+      ),
+      effect = factor(
+        data$design$effect[data$question],
+        levels = c(
+        "none", "symbol", "colour symbol", "colour ci", "symbol + colour ci"
+      )),
+      year = attr(data$dataset, "selected_year"),
+      correct = data$dataset$classification[
+        data$dataset$x == attr(data$dataset, "selected_year")
+      ],
+      answer = factor(
+        input$interpretation,
+        levels = c("toename", "afname", "stabiel", "onzeker", "geen idee"),
+        labels = c("+", "-", "~", "?", "x")
+      )
+    ) %>%
+      list() %>%
+      c(data$interpretation) -> data$interpretation
     updateRadioButtons(
       session = session, inputId = "interpretation", selected = character(0)
     )
     if (data$question == nrow(data$design)) {
+      gist(gist_id) %>%
+        gist_save(path = root)
+      read_vc("exam", root = file.path(root, gist_id)) %>%
+        bind_rows(data$interpretation) %>%
+        write_vc(
+          "exam", root = file.path(root, gist_id),
+          sorting = c("session", "timestamp"))
+      gist(gist_id) %>%
+        update_files(
+          file.path(root, gist_id, "exam.tsv"),
+          file.path(root, gist_id, "exam.yml")
+        ) %>%
+        update()
+      data$interpretation <- list()
       data$level <- data$level + 1
       data$question <- NULL
     } else {
