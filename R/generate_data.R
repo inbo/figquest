@@ -24,10 +24,12 @@ generate_data <- function(
   )
   f_up <- runif(1, f_up_low, f_up_high)
   direction <- sample(c(-1, 1), 1)
-  scale_data(
+  ds <- scale_data(
     f_down = min(direction * c(f_down, f_up)),
     f_up = max(direction * c(f_down, f_up)), threshold = threshold
   )
+  attr(ds, "direction") <- direction
+  return(ds)
 }
 
 #' Generate a time series
@@ -50,9 +52,10 @@ scale_data <- function(f_down = -0.75, f_up = 0.25, threshold = log(0.75)) {
     is.number(f_down), is.number(f_up), is.number(threshold), f_down < f_up
   )
   sigma <- abs(threshold) * 0.5 * (f_up - f_down) / qnorm(0.95)
+  flip <- sample(c(-1, 1), 1)
   read_vc("base_data", root = system.file(package = "figquest")) %>%
     transmute(
-      x = sample(c(-1, 1), 1) * .data$x,
+      x = flip * .data$x,
       x = .data$x - min(.data$x) + 2001,
       mu = .data$y * abs(threshold) * 0.5 * (f_up + f_down),
       lcl_90 = qnorm(0.05, mean = .data$mu, sd = sigma),
@@ -71,5 +74,6 @@ scale_data <- function(f_down = -0.75, f_up = 0.25, threshold = log(0.75)) {
   attr(dataset, "threshold") <- threshold
   attr(dataset, "f_down") <- f_down
   attr(dataset, "f_up") <- f_up
+  attr(dataset, "flip") <- flip
   return(dataset)
 }

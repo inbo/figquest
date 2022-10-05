@@ -5,30 +5,135 @@ library(tidyr)
 library(ggplot2)
 
 max_question <- 10
+max_interpretation <- 4
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-  fluidRow(
-    column(htmlOutput("question_text"), width = 12)
-  ),
-  fluidRow(
-    radioButtons(
-      "preference", "Jouw voorkeur", inline = TRUE, selected = character(0),
-      choiceValues = 1:6 - mean(1:6),
-      choiceNames = c(
-        "zeker A", "eerder A", "misschien A", "misschien B", "eerder B",
-        "zeker B"
+  tabsetPanel(
+    id = "hidden_tabs", type = "hidden",
+    tabPanelBody(
+      "introduction",
+      fluidRow(column(h1("Inleiding"), width = 10, offset = 1)),
+      fluidRow(
+        column(
+          sprintf(
+"Het INBO publiceert een aantal natuurindicatoren waarbij we allerhande trends
+grafisch weergeven.
+Met deze vragenlijst willen we onderzoeken wat voor figuur hiervoor het meest
+geschikt is.
+We starten met onderstaande vragen over jou.
+Daarmee willen we onderzoeken of er een verband is tussen jouw kennis en jouw
+voorkeuren wat betreft figuren.
+Vervolgens vragen we je om %i standaard figuren te interpreteren (multiple
+choise).
+Daarna geven we je in 4 stappen de mogelijkheid om de figuren te verbeteren.
+Hiertoe krijg je telkens 2 figuren naast elkaar te zien die op basis van een
+stijlkenmerk van elkaar verschillen.
+De gegevens in beide figuren is identiek.
+Voor elk van deze stappen tonen we maximum %i paren van figuren.
+Tenslotte leggen we je terug %i figuren ter interpretatie voor.
+Ditmaal in de stijl waar jouw voorkeur naar uitgaat.",
+            max_interpretation, max_question, max_interpretation
+          ),
+          width = 10, offset = 1
+        )
+      ),
+      fluidRow(
+        column(h2("Een beetje achtergrond over jou"), width = 10, offset = 1)
+      ),
+      fluidRow(
+        column(
+          radioButtons(
+            "math", "Hoe vertrouwd voel jij je met cijfers?", inline = TRUE,
+            selected = character(0),
+            choices = c(
+              "niet vertrouwd", "weinig vertrouwd", "vertrouwd",
+              "zeer vertrouwd"
+            )
+          ),
+          width = 10, offset = 1
+        ),
+      ),
+      fluidRow(
+        column(
+          radioButtons(
+            "stats", "Hoe vertrouwd voel jij je met statistiek?", inline = TRUE,
+            selected = character(0),
+            choices = c(
+              "niet vertrouwd", "weinig vertrouwd", "vertrouwd",
+              "zeer vertrouwd"
+            )
+          ),
+          width = 10, offset = 1
+        )
+      ),
+      fluidRow(
+        column(
+          radioButtons(
+            "colourblind", "Ben je kleurenblind?", inline = TRUE,
+            selected = character(0),
+            choices = c("ja", "nee", "wil liever niet vertellen")
+          ),
+          width = 10, offset = 1
+        ),
+        column(actionButton("next_intro", "volgende"), width = 5, offset = 1)
+      ),
+      fluidRow(column(htmlOutput("intro_problem"), width = 5, offset = 1))
+    ),
+    tabPanelBody(
+      "comparison",
+      fluidRow(
+        column(htmlOutput("question_text"), width = 10, offset = 1)
+      ),
+      fluidRow(
+        column(
+          radioButtons(
+            "preference", "Jouw voorkeur", inline = TRUE,
+            selected = character(0), choiceValues = 1:6 - mean(1:6),
+            choiceNames = c(
+              "zeker A", "eerder A", "misschien A", "misschien B", "eerder B",
+              "zeker B"
+            )
+          ),
+          width = 10, offset = 1
+        ),
+        column(actionButton("next_button", "volgende"), width = 5, offset = 1)
+      ),
+      fluidRow(
+        column(plotOutput("plot_a", height = "600px"), width = 5, offset = 1),
+        column(plotOutput("plot_b", height = "600px"), width = 5, offset = 1)
       )
     ),
-    actionButton("next_button", "volgende")
-  ),
-  fluidRow(
-    column(plotOutput("plot_a", height = "600px"), width = 6),
-    column(plotOutput("plot_b", height = "600px"), width = 6)
+    tabPanelBody(
+      "exam",
+      fluidRow(
+        column(htmlOutput("question_exam"), width = 10, offset = 1)
+      ),
+      fluidRow(
+        column(
+          radioButtons(
+            "interpretation", "Jouw interpretatie", inline = TRUE,
+            selected = character(0),
+            choices = c("toename", "afname", "stabiel", "onzeker", "geen idee")
+          ),
+          width = 10, offset = 1
+        ),
+        column(actionButton("next_exam", "volgende"), width = 10, offset = 1)
+      ),
+      fluidRow(
+        column(
+          plotOutput("plot_exam", height = "600px"), width = 10, offset = 1
+        )
+      )
+    ),
+    tabPanelBody(
+      "thanks",
+      h1("Hartelijk dank om deel te nemen aan dit onderzoek.")
+    )
   )
 )
 
-# Define server logic required to draw a histogram
+# nolint start: cyclocomp_linter.
 server <- function(input, output, session) {
 
   data <- reactiveValues(
@@ -37,6 +142,9 @@ server <- function(input, output, session) {
     design = NULL,
     level = 1,
     level_question = c(
+"",
+"Hoe zou jij de toestand van %i (ter hoogte van verticale stippellijn)
+interpreteren?",
 "Verkies je labels op de y as als een index of als een relatief verschil?
 Bij een index vermenigvuldigen we de cijfers met een vast getal zodat de waarde
 in het referentiejaar gelijk is aan 100.
@@ -54,14 +162,13 @@ Welke figuur kan je het makkelijkst interpreteren?",
 In dit geval verschillen ze in de manier waarop we de interpretatie van het
 effect weergeven.
 We nemen jouw voorkeur uit eerder antwoorden mee.
-Welke figuur kan je het makkelijkst interpreteren?"
+Welke figuur kan je het makkelijkst interpreteren?",
+"Hoe zou jij de toestand van %i (ter hoogte van verticale stippellijn)
+interpreteren?"
 ),
     preferred = list(),
     question = NULL
   )
-
-  output$test <- renderText("test")
-
   output$question_text <- renderText(
     sprintf(
       "%s<br>deelvraag %i van %i", data$level_question[data$level],
@@ -70,7 +177,33 @@ Welke figuur kan je het makkelijkst interpreteren?"
   )
 
   observeEvent(data$level, {
+    updateTabsetPanel(
+      session = session, inputId = "hidden_tabs", selected = "comparison"
+    )
     if (data$level == 1) {
+      updateTabsetPanel(
+        session = session, inputId = "hidden_tabs", selected = "introduction"
+      )
+      return(NULL)
+    }
+    if (data$level == 2) {
+      updateTabsetPanel(
+        session = session, inputId = "hidden_tabs", selected = "exam"
+      )
+      data$design <- generate_design(
+        design_effect = list(y_label = c("index", "change")),
+        design_data = c(
+          tail(data$preferred, -1),
+          list(
+            size = c("stable", "strong", "potential"), reference = "none",
+            ci = "none", effect = "none", threshold = log(c(0.9, 0.75))
+          )
+        ),
+        max_question = max_interpretation
+      )
+      return(NULL)
+    }
+    if (data$level == 3) {
       data$design <- generate_design(
         design_effect = list(y_label = c("index", "change")),
         design_data = list(
@@ -81,7 +214,7 @@ Welke figuur kan je het makkelijkst interpreteren?"
       )
       return(NULL)
     }
-    if (data$level == 2) {
+    if (data$level == 4) {
       data$design <- generate_design(
         design_effect = list(reference = c("none", "lines", "lines + text")),
         design_data = c(
@@ -95,7 +228,7 @@ Welke figuur kan je het makkelijkst interpreteren?"
       )
       return(NULL)
     }
-    if (data$level == 3) {
+    if (data$level == 5) {
       data$design <- generate_design(
         design_effect = list(ci = c("none", "band", "gradient")),
         design_data = c(
@@ -109,7 +242,7 @@ Welke figuur kan je het makkelijkst interpreteren?"
       )
       return(NULL)
     }
-    if (data$level == 4) {
+    if (data$level == 6) {
       if (data$preferred$ci == "none") {
         effect <- c("none", "symbol", "colour symbol")
       } else {
@@ -130,14 +263,30 @@ Welke figuur kan je het makkelijkst interpreteren?"
       )
       return(NULL)
     }
-    output$plot_a <- renderPlot(NULL)
-    output$plot_b <- renderPlot(NULL)
-    output$question_text <- renderText(
-      "<h1>Hartelijk bedankt om deel te nemen aan ons onderzoek.</h1>"
-    )
-    updateActionButton(session = session, inputId = "next_button", label = "")
-    updateRadioButtons(
-      session = session, inputId = "preference", choices = "", label = ""
+    if (data$level == 7) {
+      updateTabsetPanel(
+        session = session, inputId = "hidden_tabs", selected = "exam"
+      )
+      data$design <- generate_design(
+        design_effect = vapply(
+          head(data$preferred, 1), FUN.VALUE = vector(mode = "list", 1),
+          FUN = function(x) {
+            list(rep(x, 2))
+          }
+        ),
+        design_data = c(
+          tail(data$preferred, -1),
+          list(
+            size = c("stable", "strong", "potential"),
+            threshold = log(c(0.9, 0.75))
+          )
+        ),
+        max_question = max_interpretation
+      )
+      return(NULL)
+    }
+    updateTabsetPanel(
+      session = session, inputId = "hidden_tabs", selected = "thanks"
     )
   })
 
@@ -168,6 +317,20 @@ Welke figuur kan je het makkelijkst interpreteren?"
       pivot_wider(
         names_from = !!design_to, values_from = !!values_to
       ) -> data$design_ab
+    if (data$level %in% c(2, 7) && data$question <= max_interpretation) {
+      attr(data$dataset, "selected_year") <- sample(data$dataset$x, 1)
+      isolate({
+        question_text <- sprintf(
+          data$level_question[data$level], attr(data$dataset, "selected_year")
+        )
+      })
+      output$question_exam <- renderText(
+        sprintf(
+          "%s<br>deelvraag %i van %i", question_text, data$question,
+          nrow(data$design)
+        )
+      )
+    }
   })
 
   output$plot_a <- renderPlot({
@@ -194,6 +357,19 @@ Welke figuur kan je het makkelijkst interpreteren?"
       ci = data$design_ab$ci[selected], effect = data$design_ab$effect[selected]
     ) +
       ggtitle("B")
+  })
+
+  output$plot_exam <- renderPlot({
+    if (is.null(data$dataset)) {
+      return(NULL)
+    }
+    selected <- data$design_ab[, session$token] == "a"
+    create_figure(
+      dataset = data$dataset, reference = data$design_ab$reference[selected],
+      y_label = data$design_ab$y_label[selected],
+      ci = data$design_ab$ci[selected], effect = data$design_ab$effect[selected]
+    ) +
+      geom_vline(xintercept = attr(data$dataset, "selected_year"), linetype = 2)
   })
 
   observeEvent(input$next_button, {
@@ -231,7 +407,50 @@ Welke figuur kan je het makkelijkst interpreteren?"
       data$question <- data$question + 1
     }
   })
+
+  observeEvent(input$next_intro, {
+    if (
+      is.null(input$math) || is.null(input$stats) || is.null(input$colourblind)
+    ) {
+      output$intro_problem <- renderText(
+        "<p  style='color:red;'>Graag alle vragen beantwoorden</p>"
+      )
+      return(NULL)
+    }
+    data$level <- data$level + 1
+  })
+
+  observeEvent(input$next_exam, {
+    if (!data$level %in% c(2, 7)) {
+      return(NULL)
+    }
+    if (is.null(input$interpretation)) {
+      isolate({
+        question_text <- sprintf(
+          data$level_question[data$level], attr(data$dataset, "selected_year")
+        )
+      })
+      output$question_exam <- renderText(
+        sprintf(
+          "%s<br>deelvraag %i van %i\n%s",
+          question_text, data$question, nrow(data$design),
+          "<p style='color:red;'>Gelieve de vraag eerst te beantwoorden.</p>"
+        )
+      )
+      return(NULL)
+    }
+    updateRadioButtons(
+      session = session, inputId = "interpretation", selected = character(0)
+    )
+    if (data$question == nrow(data$design)) {
+      data$level <- data$level + 1
+      data$question <- NULL
+    } else {
+      data$question <- data$question + 1
+    }
+  })
 }
+# nolint end
 
 calc_preferred <- function(ds, answer) {
   ds %>%

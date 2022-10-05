@@ -34,7 +34,7 @@ Must be either \code{"lines + text"} (default), \code{"lines"} or \code{"none"}.
 \code{"colour symbol"} displays point with text symbols with different colours.
 \code{"colour ci"} colours the confidence intervals.
 \code{"symbol + colour ci"} colours the confidence intervals and displays points
-with text symbols.}
+with text symbols`.}
 }
 \description{
 Create a \code{ggplot2} figure
