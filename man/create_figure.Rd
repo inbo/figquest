@@ -9,7 +9,8 @@ create_figure(
   reference = c("none", "lines", "lines + text"),
   y_label = c("index", "change"),
   ci = c("none", "band", "gradient"),
-  effect = c("none", "symbol", "colour symbol", "colour ci", "symbol + colour ci")
+  effect = c("none", "symbol", "colour symbol", "colour ci", "symbol + colour ci"),
+  scale_points = 1
 )
 }
 \arguments{
@@ -35,6 +36,9 @@ Must be either \code{"lines + text"} (default), \code{"lines"} or \code{"none"}.
 \code{"colour ci"} colours the confidence intervals.
 \code{"symbol + colour ci"} colours the confidence intervals and displays points
 with text symbols`.}
+
+\item{scale_points}{a scaling factor for point symbols.
+Defaults to \code{1}.}
 }
 \description{
 Create a \code{ggplot2} figure

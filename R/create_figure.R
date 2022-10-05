@@ -17,6 +17,8 @@
 #' `"colour ci"` colours the confidence intervals.
 #' `"symbol + colour ci"` colours the confidence intervals and displays points
 #' with text symbols`.
+#' @param scale_points a scaling factor for point symbols.
+#' Defaults to `1`.
 #' @export
 #' @importFrom INBOtheme inbo_steun_blauw inbo_steun_donkerroos traffic_palette
 #' @importFrom dplyr %>% mutate
@@ -32,7 +34,8 @@ create_figure <- function(
   y_label = c("index", "change"), ci = c("none", "band", "gradient"),
   effect = c(
     "none", "symbol", "colour symbol", "colour ci", "symbol + colour ci"
-  )
+  ),
+  scale_points = 1
 ) {
   reference <- match.arg(reference)
   y_label <- match.arg(y_label)
@@ -170,13 +173,13 @@ create_figure <- function(
   if (grepl("symbol", effect)) {
     if (grepl("colour ci", effect)) {
       p <- p +
-        geom_point(size = 6, show.legend = TRUE)
+        geom_point(size = 6 * scale_points, show.legend = TRUE)
     } else {
       p <- p +
-        geom_point(aes(colour = effect), size = 6) +
+        geom_point(aes(colour = effect), size = 6 * scale_points) +
         geom_text(
-          aes(label = classification), colour = "white", size = 3,
-          show.legend = TRUE
+          aes(label = classification), colour = "white",
+          size = 3 * scale_points, show.legend = TRUE
         ) +
         scale_colour_manual(
           values = interpretation_gradient, drop = FALSE,
@@ -190,7 +193,7 @@ create_figure <- function(
     }
     p <- p +
       geom_text(
-        aes(label = classification), colour = "white", size = 3,
+        aes(label = classification), colour = "white", size = 3 * scale_points,
         show.legend = TRUE
       )
   }

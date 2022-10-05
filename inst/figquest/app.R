@@ -5,6 +5,7 @@ library(tidyr)
 library(ggplot2)
 library(gistr)
 library(git2rdata)
+library(INBOtheme)
 
 max_question <- 10
 max_interpretation <- 4
@@ -146,6 +147,7 @@ server <- function(input, output, session) {
     answer = numeric(0),
     dataset = NULL,
     design = NULL,
+    fontsize = 20,
     interpretation = list(),
     level = 1,
     level_question = c(
@@ -182,6 +184,11 @@ interpreteren?"
       data$question, nrow(data$design)
     )
   )
+
+  observeEvent(data$fontsize, {
+    theme_set(theme_inbo(base_size = data$fontsize))
+    update_geom_defaults(geom = "text", list(size = 3 * data$fontsize / 12))
+  })
 
   observeEvent(data$level, {
     updateTabsetPanel(
@@ -348,6 +355,7 @@ interpreteren?"
     create_figure(
       dataset = data$dataset, reference = data$design_ab$reference[selected],
       y_label = data$design_ab$y_label[selected],
+      scale_points = data$fontsize / 12,
       ci = data$design_ab$ci[selected], effect = data$design_ab$effect[selected]
     ) +
       ggtitle("A")
@@ -361,6 +369,7 @@ interpreteren?"
     create_figure(
       dataset = data$dataset, reference = data$design_ab$reference[selected],
       y_label = data$design_ab$y_label[selected],
+      scale_points = data$fontsize / 12,
       ci = data$design_ab$ci[selected], effect = data$design_ab$effect[selected]
     ) +
       ggtitle("B")
@@ -374,6 +383,7 @@ interpreteren?"
     create_figure(
       dataset = data$dataset, reference = data$design_ab$reference[selected],
       y_label = data$design_ab$y_label[selected],
+      scale_points = data$fontsize / 12,
       ci = data$design_ab$ci[selected], effect = data$design_ab$effect[selected]
     ) +
       geom_vline(xintercept = attr(data$dataset, "selected_year"), linetype = 2)
@@ -418,7 +428,7 @@ interpreteren?"
         ) %>%
         write_vc(
           paste0("preference_", data$level), root = file.path(root, gist_id),
-          sorting = c("session", "timestamp")
+          sorting = c("session", "timestamp", "id")
         )
       gist(gist_id) %>%
         update_files(
