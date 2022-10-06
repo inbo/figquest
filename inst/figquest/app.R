@@ -133,6 +133,13 @@ Ditmaal in de stijl waar jouw voorkeur naar uitgaat.",
       "thanks",
       h1("Hartelijk dank om deel te nemen aan dit onderzoek.")
     )
+  ),
+  fluidRow(
+    column(
+      actionButton("font_small", "lettertype figuur verkleinen"),
+      actionButton("font_large", "lettertype figuur vergroten"),
+      width = 10, offset = 1
+    )
   )
 )
 
@@ -389,6 +396,50 @@ interpreteren?"
       geom_vline(xintercept = attr(data$dataset, "selected_year"), linetype = 2)
   })
 
+  observeEvent(data$fontsize, {
+    if (data$level == 1 || is.null(data$dataset)) {
+      return(NULL)
+    }
+    selected <- data$design_ab[, session$token] == "a"
+    if (data$level %in% c(2, 7)) {
+      output$plot_exam <- renderPlot({
+        create_figure(
+          dataset = data$dataset,
+          reference = data$design_ab$reference[selected],
+          y_label = data$design_ab$y_label[selected],
+          scale_points = data$fontsize / 12,
+          ci = data$design_ab$ci[selected],
+          effect = data$design_ab$effect[selected]
+        ) +
+          geom_vline(
+            xintercept = attr(data$dataset, "selected_year"), linetype = 2
+          )
+      })
+      return(NULL)
+    }
+    output$plot_a <- renderPlot({
+      create_figure(
+        dataset = data$dataset, reference = data$design_ab$reference[selected],
+        y_label = data$design_ab$y_label[selected],
+        scale_points = data$fontsize / 12,
+        ci = data$design_ab$ci[selected],
+        effect = data$design_ab$effect[selected]
+      ) +
+        ggtitle("A")
+    })
+    selected <- data$design_ab[, session$token] == "b"
+    output$plot_b <- renderPlot({
+      create_figure(
+        dataset = data$dataset, reference = data$design_ab$reference[selected],
+        y_label = data$design_ab$y_label[selected],
+        scale_points = data$fontsize / 12,
+        ci = data$design_ab$ci[selected],
+        effect = data$design_ab$effect[selected]
+      ) +
+        ggtitle("B")
+    })
+  })
+
   observeEvent(input$next_button, {
     if (data$level > length(data$level_question)) {
       return(NULL)
@@ -575,6 +626,14 @@ interpreteren?"
     } else {
       data$question <- data$question + 1
     }
+  })
+
+  observeEvent(input$font_small, {
+    data$fontsize <- data$fontsize / 1.1
+  })
+
+  observeEvent(input$font_large, {
+    data$fontsize <- data$fontsize * 1.1
   })
 }
 # nolint end
