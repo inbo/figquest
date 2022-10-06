@@ -1,7 +1,23 @@
 description: Configuration file for checklist::check_pkg()
 package: yes
 allowed:
-  warnings: []
+  warnings:
+  - motivation: Package not from CRAN and required INBO specific packages
+    value: |-
+      checking CRAN incoming feasibility ... WARNING
+      Maintainer: 'Thierry Onkelinx <thierry.onkelinx@inbo.be>'
+
+      New submission
+
+      Strong dependencies not in mainstream repositories:
+        effectclass, INBOtheme
+      Availability using Additional_repositories specification:
+        effectclass   yes   https://inbo.r-universe.dev
+        INBOtheme     yes   https://inbo.r-universe.dev
+  - motivation: unit tests not relevant
+    value: |-
+      checking for code which exercises the package ... WARNING
+      No examples, no tests, no vignettes
   notes: []
 citation_roles:
 - aut
