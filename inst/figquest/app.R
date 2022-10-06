@@ -133,13 +133,6 @@ Ditmaal in de stijl waar jouw voorkeur naar uitgaat.",
       "thanks",
       h1("Hartelijk dank om deel te nemen aan dit onderzoek.")
     )
-  ),
-  fluidRow(
-    column(
-      actionButton("font_small", "lettertype figuur verkleinen"),
-      actionButton("font_large", "lettertype figuur vergroten"),
-      width = 10, offset = 1
-    )
   )
 )
 
