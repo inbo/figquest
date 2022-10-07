@@ -22,17 +22,20 @@ ui <- fluidPage(
           sprintf(
 "Het INBO publiceert een aantal natuurindicatoren waarbij we allerhande trends
 grafisch weergeven.
+Deze trends worden uitgedrukt als een wijziging ten opzichte van een
+referentiejaar.
+In de voorbeelden die we geven is dit het jaar 2000.
 Met deze vragenlijst willen we onderzoeken wat voor figuur hiervoor het meest
 geschikt is.
 We starten met onderstaande vragen over jou.
 Daarmee willen we onderzoeken of er een verband is tussen jouw kennis en jouw
 voorkeuren wat betreft figuren.
 Vervolgens vragen we je om %i standaard figuren te interpreteren (multiple
-choise).
+choice).
 Daarna geven we je in 4 stappen de mogelijkheid om de figuren te verbeteren.
 Hiertoe krijg je telkens 2 figuren naast elkaar te zien die op basis van een
 stijlkenmerk van elkaar verschillen.
-De gegevens in beide figuren is identiek.
+De gegevens in beide figuren zijn identiek.
 Voor elk van deze stappen tonen we maximum %i paren van figuren.
 Tenslotte leggen we je terug %i figuren ter interpretatie voor.
 Ditmaal in de stijl waar jouw voorkeur naar uitgaat.",
@@ -75,7 +78,7 @@ Ditmaal in de stijl waar jouw voorkeur naar uitgaat.",
           radioButtons(
             "colourblind", "Ben je kleurenblind?", inline = TRUE,
             selected = character(0),
-            choices = c("ja", "nee", "wil liever niet vertellen")
+            choices = c("ja", "nee", "wil ik liever niet vertellen")
           ),
           width = 10, offset = 1
         ),
@@ -117,7 +120,10 @@ Ditmaal in de stijl waar jouw voorkeur naar uitgaat.",
           radioButtons(
             "interpretation", "Jouw interpretatie", inline = TRUE,
             selected = character(0),
-            choices = c("toename", "afname", "stabiel", "onzeker", "geen idee")
+            choices = c(
+              "toename t.o.v. 2000", "afname t.o.v. 2000",
+              "stabiel t.o.v. 2000", "onzeker", "geen idee"
+            )
           ),
           width = 10, offset = 1
         ),
@@ -130,8 +136,13 @@ Ditmaal in de stijl waar jouw voorkeur naar uitgaat.",
       )
     ),
     tabPanelBody(
+      "intermediate",
+      h2("We slaan de tussentijdse resultaten op.")
+    ),
+    tabPanelBody(
       "thanks",
-      h1("Hartelijk dank om deel te nemen aan dit onderzoek.")
+      h1("Hartelijk dank om deel te nemen aan dit onderzoek."),
+      "Voor vragen en opmerkingen kan u terecht bij thierry.onkelinx@inbo.be"
     )
   )
 )
@@ -152,28 +163,28 @@ server <- function(input, output, session) {
     level = 1,
     level_question = c(
 "",
-"Hoe zou jij de toestand van %i (ter hoogte van verticale stippellijn)
-interpreteren?",
-"Verkies je labels op de y as als een index of als een relatief verschil?
+"Hoe zou u de toestand van %i (ter hoogte van verticale stippellijn)
+interpreteren ten opzichte van het referentiejaar 2000?",
+"Verkiest u labels op de y as als een index of als een relatief verschil?
 Bij een index vermenigvuldigen we de cijfers met een vast getal zodat de waarde
 in het referentiejaar gelijk is aan 100.
 Bij een relatief verschil geven we de procentuele wijziging ten opzichte van
 de waarde in het referentiejaar.",
-"Beide figuren zijn een andere manier van weergave van de dezelfde tijdreeks.
+"Beide figuren zijn een andere manier van weergave van dezelfde tijdreeks.
 In dit geval verschillen ze in de manier waarop we referentielijnen weergeven.
-We nemen jouw voorkeur uit eerder antwoorden mee.
-Welke figuur kan je het makkelijkst interpreteren?",
+We nemen uw voorkeur uit eerdere antwoorden mee.
+Welke figuur kan u het makkelijkst interpreteren?",
 "Beide figuren zijn een andere manier van weergave van de dezelfde tijdreeks.
 In dit geval verschillen ze in de manier waarop we onzekerheid weergeven.
-We nemen jouw voorkeur uit eerder antwoorden mee.
-Welke figuur kan je het makkelijkst interpreteren?",
+We nemen uw voorkeur uit eerdere antwoorden mee.
+Welke figuur kan u het makkelijkst interpreteren?",
 "Beide figuren zijn een andere manier van weergave van de dezelfde tijdreeks.
 In dit geval verschillen ze in de manier waarop we de interpretatie van het
 effect weergeven.
-We nemen jouw voorkeur uit eerder antwoorden mee.
-Welke figuur kan je het makkelijkst interpreteren?",
-"Hoe zou jij de toestand van %i (ter hoogte van verticale stippellijn)
-interpreteren?"
+We nemen uw voorkeur uit eerdere antwoorden mee.
+Welke figuur kan u het makkelijkst interpreteren?",
+"Hoe zou u de toestand van %i (ter hoogte van verticale stippellijn)
+interpreteren ten opzichte van het referentiejaar 2000?"
 ),
     preferred = list(),
     question = NULL
@@ -188,6 +199,12 @@ interpreteren?"
   observeEvent(data$fontsize, {
     theme_set(theme_inbo(base_size = data$fontsize))
     update_geom_defaults(geom = "text", list(size = 3 * data$fontsize / 12))
+    update_geom_defaults(geom = "line", list(size = 0.5 * data$fontsize / 12))
+    update_geom_defaults(geom = "hline", list(size = 0.5 * data$fontsize / 12))
+    update_geom_defaults(
+      geom = "vline",
+      list(size = 1 * data$fontsize / 12, colour = inbo_steun_donkerroos)
+    )
   })
 
   observeEvent(data$level, {
@@ -269,7 +286,7 @@ interpreteren?"
         design_data = c(
           data$preferred,
           list(
-            size = c("stable", "moderate", "strong", "potential"),
+            size = c("moderate", "strong", "potential"),
             threshold = log(c(0.9, 0.75))
           )
         ),
@@ -384,9 +401,9 @@ interpreteren?"
       dataset = data$dataset, reference = data$design_ab$reference[selected],
       y_label = data$design_ab$y_label[selected],
       scale_points = data$fontsize / 12,
+      hightlight = attr(data$dataset, "selected_year"),
       ci = data$design_ab$ci[selected], effect = data$design_ab$effect[selected]
-    ) +
-      geom_vline(xintercept = attr(data$dataset, "selected_year"), linetype = 2)
+    )
   })
 
   observeEvent(data$fontsize, {
@@ -458,6 +475,9 @@ interpreteren?"
       )
     )
     if (data$question == nrow(data$design)) {
+      updateTabsetPanel(
+        session = session, inputId = "hidden_tabs", selected = "intermediate"
+      )
       gist(gist_id) %>%
         gist_save(path = root)
       data$design %>%
@@ -500,6 +520,9 @@ interpreteren?"
       )
       return(NULL)
     }
+    updateTabsetPanel(
+      session = session, inputId = "hidden_tabs", selected = "intermediate"
+    )
     gist(gist_id) %>%
       gist_save(path = root)
     data.frame(
@@ -519,7 +542,8 @@ interpreteren?"
         labels = c("not", "low", "medium", "high")
       ),
       colourblind = factor(
-        input$colourblind, levels = c("ja", "nee", "wil liever niet vertellen"),
+        input$colourblind,
+        levels = c("ja", "nee", "wil ik liever niet vertellen"),
         labels = c("yes", "no", "no answer")
       )
     ) %>%
@@ -590,7 +614,10 @@ interpreteren?"
       ],
       answer = factor(
         input$interpretation,
-        levels = c("toename", "afname", "stabiel", "onzeker", "geen idee"),
+        levels = c(
+          "toename t.o.v. 2000", "afname t.o.v. 2000", "stabiel t.o.v. 2000",
+          "onzeker", "geen idee"
+        ),
         labels = c("+", "-", "~", "?", "x")
       )
     ) %>%
@@ -600,6 +627,9 @@ interpreteren?"
       session = session, inputId = "interpretation", selected = character(0)
     )
     if (data$question == nrow(data$design)) {
+      updateTabsetPanel(
+        session = session, inputId = "hidden_tabs", selected = "intermediate"
+      )
       gist(gist_id) %>%
         gist_save(path = root)
       read_vc("exam", root = file.path(root, gist_id)) %>%

@@ -10,7 +10,8 @@ create_figure(
   y_label = c("index", "change"),
   ci = c("none", "band", "gradient"),
   effect = c("none", "symbol", "colour symbol", "colour ci", "symbol + colour ci"),
-  scale_points = 1
+  scale_points = 1,
+  highlight = NULL
 )
 }
 \arguments{
@@ -39,6 +40,8 @@ with text symbols`.}
 
 \item{scale_points}{a scaling factor for point symbols.
 Defaults to \code{1}.}
+
+\item{highlight}{Which year to highlight with a vertical dashed line.}
 }
 \description{
 Create a \code{ggplot2} figure

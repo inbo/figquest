@@ -19,11 +19,12 @@
 #' with text symbols`.
 #' @param scale_points a scaling factor for point symbols.
 #' Defaults to `1`.
+#' @param highlight Which year to highlight with a vertical dashed line.
 #' @export
 #' @importFrom INBOtheme inbo_steun_blauw inbo_steun_donkerroos traffic_palette
 #' @importFrom dplyr %>% mutate
 #' @importFrom ggplot2 aes annotate element_blank geom_hline geom_line
-#' geom_point geom_ribbon geom_text ggplot guides guide_legend
+#' geom_point geom_ribbon geom_text geom_vline ggplot guides guide_legend
 #' scale_colour_manual scale_fill_manual scale_x_continuous scale_y_log10 theme
 #' unit
 #' @importFrom rlang .data
@@ -35,7 +36,7 @@ create_figure <- function(
   effect = c(
     "none", "symbol", "colour symbol", "colour ci", "symbol + colour ci"
   ),
-  scale_points = 1
+  scale_points = 1, highlight = NULL
 ) {
   reference <- match.arg(reference)
   y_label <- match.arg(y_label)
@@ -170,6 +171,10 @@ create_figure <- function(
     }
   }
   p <- p + geom_line()
+  if (!is.null(highlight)) {
+    p <- p +
+      geom_vline(xintercept = highlight, linetype = 2)
+  }
   if (grepl("symbol", effect)) {
     if (grepl("colour ci", effect)) {
       p <- p +
