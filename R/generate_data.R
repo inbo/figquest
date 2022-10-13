@@ -9,18 +9,18 @@ generate_data <- function(
   ) {
   size <- match.arg(size)
   f_down_low <- switch(
-    size, stable = -0.95, moderate = 0.05, strong = 1.05, potential = -0.95
+    size, stable = -0.5, moderate = 0.05, strong = 1.05, potential = -0.5
   )
   f_down_high <- switch(
-    size, stable = -0.05, moderate = 0.5, strong = 1.5, potential = -0.05
+    size, stable = -0.05, moderate = 0.5, strong = 1.1, potential = -0.05
   )
   f_down <- runif(1, f_down_low, f_down_high)
   f_up_low <- switch(
-    size, stable = 0.05, moderate = f_down_high, strong = f_down_high,
-    potential = 1.5
+    size, stable = 0.05, moderate = f_down_high + 0.1,
+    strong = f_down_high + 0.1, potential = 1.05
   )
   f_up_high <- switch(
-    size, stable = 0.95, moderate = 0.95, strong = 2, potential = 2
+    size, stable = 0.5, moderate = 0.95, strong = 1.5, potential = 1.2
   )
   f_up <- runif(1, f_up_low, f_up_high)
   direction <- sample(c(-1, 1), 1)
