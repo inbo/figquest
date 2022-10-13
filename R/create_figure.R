@@ -25,8 +25,8 @@
 #' @importFrom dplyr %>% mutate
 #' @importFrom ggplot2 aes annotate element_blank geom_hline geom_line
 #' geom_point geom_ribbon geom_text geom_vline ggplot guides guide_legend
-#' scale_colour_manual scale_fill_manual scale_x_continuous scale_y_log10 theme
-#' unit
+#' labs scale_colour_manual scale_fill_manual scale_linetype_manual
+#' scale_x_continuous scale_y_log10 theme unit
 #' @importFrom rlang .data
 #' @importFrom stats setNames
 create_figure <- function(
@@ -127,33 +127,40 @@ create_figure <- function(
             group = .data$set
           )
         ) +
-        scale_fill_manual(
-          "wijziging", values = interpretation_gradient, drop = FALSE,
-          labels = wrap_long
-        ) +
         guides(
           fill = guide_legend(
             override.aes = list(label = names(interpretation_code)), alpha = 1
           )
         ) +
+        scale_fill_manual(
+          values = interpretation_gradient, drop = FALSE, labels = wrap_long
+        ) +
         theme(legend.key.size = unit(24, units = "points"))
       if (ci == "gradient") {
         p <- p +
           geom_ribbon(
-            data = ci_data, alpha = 0.3,
+            data = ci_data, alpha = 0.3, key_glyph = draw_key_rect_60,
             aes(
               ymin = .data$lcl_60, ymax = .data$ucl_60, fill = .data$effect,
               group = .data$set
             )
           ) +
           geom_ribbon(
-            data = ci_data, alpha = 0.3,
+            data = ci_data, alpha = 0.3, key_glyph = draw_key_rect_30,
             aes(
               ymin = .data$lcl_30, ymax = .data$ucl_30, fill = .data$effect,
               group = .data$set
             )
+          ) +
+          labs(
+            fill = "schatting met\n30%, 60% en 90%\nbetrouwbaarheid
+en interpretatie"
           )
+      } else {
+        p <- p +
+          labs(fill = "schatting met 90%\nbetrouwbaarheid\nen interpretatie")
       }
+      p <- p + geom_line(show.legend = TRUE)
     } else {
       p <- p +
         geom_ribbon(
@@ -166,16 +173,23 @@ create_figure <- function(
           ) +
           geom_ribbon(
             aes(ymin = .data$lcl_30, ymax = .data$ucl_30), alpha = 0.3
-          )
+          ) +
+          geom_line(aes(linetype = ""), key_glyph = draw_key_line_gradient()) +
+          labs(linetype = "schatting met\n30%, 60% en 90%\nbetrouwbaarheid")
+      } else {
+        p <- p +
+          geom_line(aes(linetype = ""), key_glyph = draw_key_line_band()) +
+          labs(linetype = "schatting met 90%\nbetrouwbaarheid")
       }
     }
   }
-  p <- p + geom_line()
   if (!is.null(highlight)) {
     p <- p +
       geom_vline(xintercept = highlight, linetype = 2)
   }
   if (grepl("symbol", effect)) {
+    p <- p +
+      geom_line(show.legend = TRUE)
     if (grepl("colour ci", effect)) {
       p <- p +
         geom_point(size = 6 * scale_points, show.legend = TRUE)
@@ -188,7 +202,7 @@ create_figure <- function(
         ) +
         scale_colour_manual(
           values = interpretation_gradient, drop = FALSE,
-          labels = wrap_long
+          labels = wrap_long, "schatting en\ninterpretatie"
         ) +
         guides(
           colour = guide_legend(
@@ -201,6 +215,12 @@ create_figure <- function(
         aes(label = classification), colour = "white", size = 3 * scale_points,
         show.legend = TRUE
       )
+  } else {
+    if (!ci %in% c("band", "gradient")) {
+      p <- p +
+        geom_line(aes(linetype = "")) +
+        scale_linetype_manual("schatting", values = 1)
+    }
   }
   p
 }
@@ -270,4 +290,89 @@ index_minor_breaks <- function(x) {
 #' @importFrom stringr str_wrap
 wrap_long <- function(x) {
   str_wrap(x, width = 12)
+}
+
+#' @importFrom grid gList gpar linesGrob rectGrob
+#' @importFrom scales alpha
+draw_key_line_band <- function(ci_alpha = 0.3) {
+  function(data, params, ...) {
+    gList(
+      rectGrob(
+        gp = gpar(
+          col = NA, lty = data$linetype %||% 1,
+          fill = alpha(data$colour %||% "grey20", ci_alpha)
+        )
+      ),
+      linesGrob(
+        y = 0.5,
+        gp = gpar(
+          col = data$colour, lty = data$linetype %||% 1,
+          lwd = 5 * data$size %||% 1
+        )
+      )
+    )
+  }
+}
+
+#' @importFrom grid gList gpar linesGrob rectGrob
+#' @importFrom scales alpha
+draw_key_line_gradient <- function(ci_alpha = 0.3) {
+  function(data, params, ...) {
+    gList(
+      rectGrob(
+        gp = gpar(
+          col = NA, lty = data$linetype %||% 1,
+          fill = alpha(data$colour %||% "grey20", ci_alpha)
+        )
+      ),
+      rectGrob(
+        height = qnorm(.8) / qnorm(0.9),
+        gp = gpar(
+          col = NA, lty = data$linetype %||% 1,
+          fill = alpha(data$colour %||% "grey20", ci_alpha)
+        )
+      ),
+      rectGrob(
+        height = qnorm(.65) / qnorm(0.9),
+        gp = gpar(
+          col = NA, lty = data$linetype %||% 1,
+          fill = alpha(data$colour %||% "grey20", ci_alpha)
+        )
+      ),
+      linesGrob(
+        y = 0.5,
+        gp = gpar(
+          col = data$colour, lty = data$linetype %||% 1,
+          lwd = 5 * data$size %||% 1
+        )
+      )
+    )
+  }
+}
+
+#' @noRd
+#' @note Taken from the ggplot2 package
+"%||%" <- function(a, b) {
+  if (!is.null(a)) a else b
+}
+
+draw_key_rect_30 <- function(data, params, size) {
+  rectGrob(
+    height = qnorm(.65) / qnorm(0.9),
+    gp = gpar(
+      col = NA,
+      fill = alpha(data$fill %||% data$colour %||% "grey20", data$alpha),
+      lty = data$linetype %||% 1
+    )
+  )
+}
+draw_key_rect_60 <- function(data, params, size) {
+  rectGrob(
+    height = qnorm(.8) / qnorm(0.9),
+    gp = gpar(
+      col = NA,
+      fill = alpha(data$fill %||% data$colour %||% "grey20", data$alpha),
+      lty = data$linetype %||% 1
+    )
+  )
 }
