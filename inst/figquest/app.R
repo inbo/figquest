@@ -401,7 +401,7 @@ interpreteren ten opzichte van het referentiejaar 2000?"
       dataset = data$dataset, reference = data$design_ab$reference[selected],
       y_label = data$design_ab$y_label[selected],
       scale_points = data$fontsize / 12,
-      hightlight = attr(data$dataset, "selected_year"),
+      highlight = attr(data$dataset, "selected_year"),
       ci = data$design_ab$ci[selected], effect = data$design_ab$effect[selected]
     )
   })
