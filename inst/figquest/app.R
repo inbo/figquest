@@ -89,6 +89,11 @@ Ditmaal in de stijl waar jouw voorkeur naar uitgaat.",
     tabPanelBody(
       "comparison",
       fluidRow(
+        column(
+          h2("Makkelijkst te interpreteren figuur"), width = 10, offset = 1
+        )
+      ),
+      fluidRow(
         column(htmlOutput("question_text"), width = 10, offset = 1)
       ),
       fluidRow(
@@ -112,6 +117,9 @@ Ditmaal in de stijl waar jouw voorkeur naar uitgaat.",
     ),
     tabPanelBody(
       "exam",
+      fluidRow(
+        column(h2("Interpreteren van een figuur"), width = 10, offset = 1)
+      ),
       fluidRow(
         column(htmlOutput("question_exam"), width = 10, offset = 1)
       ),
@@ -594,7 +602,7 @@ interpreteren ten opzichte van het referentiejaar 2000?"
         levels = c("stable", "moderate", "strong", "potential")
       ),
       reference = factor(
-        data$design$size[data$question],
+        data$design$reference[data$question],
         levels = c("none", "lines", "lines + text")
       ),
       y_label = factor(

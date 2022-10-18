@@ -20,6 +20,7 @@ Imports:
     INBOtheme,
     purrr,
     rlang,
+    scales,
     stringr,
     tidyr,
     tidyselect

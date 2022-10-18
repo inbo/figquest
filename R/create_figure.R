@@ -351,8 +351,8 @@ draw_key_line_gradient <- function(ci_alpha = 0.3) {
 }
 
 #' @noRd
-#' @note Taken from the ggplot2 package
-"%||%" <- function(a, b) {
+#' @note Taken from the `ggplot2` package
+"%||%" <- function(a, b) { # nolint: object_name_linter.
   if (!is.null(a)) a else b
 }
 
