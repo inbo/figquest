@@ -1,6 +1,8 @@
 # figquest 0.0.1
 
-* Added `generate_design()`
+* Added `generate_design()`, `generate_data()` and `create_figure()`.
+* Add Shiny app and `Dockerfile`.
+* Update `README.md`.
 
 # figquest 0.0.0
 
