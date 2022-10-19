@@ -21,12 +21,12 @@ Imports:
     purrr,
     rlang,
     scales,
+    shiny,
     stringr,
     tidyr,
     tidyselect
 Suggests:
-    gistr,
-    shiny
+    gistr
 Additional_repositories: https://inbo.r-universe.dev
 Encoding: UTF-8
 Language: en-GB
