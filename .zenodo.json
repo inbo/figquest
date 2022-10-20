@@ -1,6 +1,6 @@
 {
   "title": "figquest: A Shiny Questionaire on Trend Figures",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "This contains the Shiny app and the related functions.",
   "creators": [
     {
