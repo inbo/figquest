@@ -29,6 +29,7 @@
 #' scale_x_continuous scale_y_log10 theme unit
 #' @importFrom rlang .data
 #' @importFrom stats setNames
+#' @importFrom utils head tail
 create_figure <- function(
   dataset = generate_data(size = "strong", threshold = log(0.75)),
   reference = c("none", "lines", "lines + text"),
@@ -46,33 +47,60 @@ create_figure <- function(
     "++" = "sterke toename", "+" = "toename", "+~" = "matige toename",
     "~" = "stabiel", "-~" = "matige daling", "-" = "daling",
     "--" = "sterke daling", "?+" = "mogelijke toename",
-    "?-" = "mogelijke daling", "?" = "onduidelijke trend"
+    "?-" = "mogelijke daling", "?" = "onduidelijke trend", "R" = "referentie"
   )
-  c(rev(traffic_palette(7)), "grey65", "grey35", "grey50") %>%
-    setNames(
-      c("++", "+", "+~", "~", "-~", "-", "--", "?+", "?-", "?")
-    ) -> interpretation_gradient
   if (grepl("colour", effect)) {
-    c(rev(traffic_palette(7)), "grey65", "grey35", "grey50") %>%
+    rev(traffic_palette(7)) |>
+      c("grey65", "grey35", "grey50") |>
       setNames(
         c("++", "+", "+~", "~", "-~", "-", "--", "?+", "?-", "?")
+      ) -> interpretation_fill
+    interpretation_fill[4] <- inbo_steun_blauw
+    names(interpretation_fill) <- head(interpretation_code, -1)
+  }
+  if (effect == "colour symbol") {
+    rev(traffic_palette(7)) |>
+      c("grey65", "grey35", "grey50", inbo_steun_donkerroos) |>
+      setNames(
+        c("++", "+", "+~", "~", "-~", "-", "--", "?+", "?-", "?", "R")
       ) -> interpretation_gradient
     interpretation_gradient[4] <- inbo_steun_blauw
   } else {
-    rep(inbo_steun_blauw, 10) %>%
+    rep(inbo_steun_blauw, 10) |>
+      c(inbo_steun_donkerroos) |>
       setNames(
-        c("++", "+", "+~", "~", "-~", "-", "--", "?+", "?-", "?")
+        c("++", "+", "+~", "~", "-~", "-", "--", "?+", "?-", "?", "R")
       ) -> interpretation_gradient
   }
   names(interpretation_gradient) <- interpretation_code
 
-  dataset <- dataset %>%
-    mutate(
-      effect = factor(
-        .data$classification, levels = names(interpretation_code),
-        labels = interpretation_code
-      )
+  reference_point <- data.frame(
+    x = min(dataset$x) - 1, mu = 1,
+    classification = factor("R", levels = names(interpretation_code)),
+    effect = factor(
+      "R", levels = names(interpretation_code), labels = interpretation_code
     )
+  )
+  if (grepl("colour ci", effect)) {
+    dataset <- dataset |>
+      mutate(
+        effect = factor(
+          .data$classification, levels = head(names(interpretation_code), -1),
+          labels = head(interpretation_code, -1)
+        )
+      )
+  } else {
+    dataset <- dataset |>
+      mutate(
+        classification = factor(
+          .data$classification, levels = names(interpretation_code)
+        ),
+        effect = factor(
+          .data$classification, levels = names(interpretation_code),
+          labels = interpretation_code
+        )
+      )
+  }
   p <- ggplot(dataset, aes(x = .data$x, y = .data$mu)) +
     scale_x_continuous(limits = c(2000, NA)) +
     theme(
@@ -129,11 +157,12 @@ create_figure <- function(
         ) +
         guides(
           fill = guide_legend(
-            override.aes = list(label = names(interpretation_code)), alpha = 1
+            override.aes = list(label = head(names(interpretation_code), -1)),
+            alpha = 1
           )
         ) +
         scale_fill_manual(
-          values = interpretation_gradient, drop = FALSE, labels = wrap_long
+          values = interpretation_fill, drop = FALSE, labels = wrap_long
         ) +
         theme(legend.key.size = unit(24, units = "points"))
       if (ci == "gradient") {
@@ -192,14 +221,18 @@ en interpretatie"
       geom_line(show.legend = TRUE)
     if (grepl("colour ci", effect)) {
       p <- p +
-        geom_point(size = 6 * scale_points, show.legend = TRUE)
+        geom_point(size = 6 * scale_points, show.legend = TRUE) +
+        scale_colour_manual(
+          values = tail(interpretation_gradient, 1), labels = wrap_long, ""
+        ) +
+        guides(
+          colour = guide_legend(
+            override.aes = list(label = tail(names(interpretation_code), 1))
+          )
+        )
     } else {
       p <- p +
         geom_point(aes(colour = effect), size = 6 * scale_points) +
-        geom_text(
-          aes(label = classification), colour = "white",
-          size = 3 * scale_points, show.legend = TRUE
-        ) +
         scale_colour_manual(
           values = interpretation_gradient, drop = FALSE,
           labels = wrap_long, "schatting en\ninterpretatie"
@@ -211,15 +244,38 @@ en interpretatie"
         )
     }
     p <- p +
+      geom_point(
+        data = reference_point, aes(colour = effect), size = 6 * scale_points
+      ) +
+      geom_text(
+        data = reference_point, aes(label = classification), colour = "white",
+        size = 3 * scale_points, show.legend = TRUE
+      ) +
       geom_text(
         aes(label = classification), colour = "white", size = 3 * scale_points,
         show.legend = TRUE
       )
   } else {
+    p <- p +
+      geom_point(
+        data = reference_point, aes(colour = effect), size = 6 * scale_points
+      ) +
+      geom_text(
+        data = reference_point, aes(label = classification), colour = "white",
+        size = 3 * scale_points, show.legend = TRUE
+      ) +
+      scale_colour_manual(
+        values = interpretation_gradient, labels = wrap_long, ""
+      ) +
+      guides(
+        colour = guide_legend(
+          override.aes = list(label = tail(names(interpretation_code), 1))
+        )
+      )
     if (!ci %in% c("band", "gradient")) {
       p <- p +
-        geom_line(aes(linetype = "")) +
-        scale_linetype_manual("schatting", values = 1)
+        geom_line(aes(linetype = "schatting")) +
+        scale_linetype("")
     }
   }
   p
@@ -238,14 +294,14 @@ generate_ci_data <- function(dataset) {
       set = cumsum(.data$set)
     ) -> sets
   sets %>%
-    select(-.data$classification, -.data$effect) %>%
+    select(-"classification", -"effect") %>%
     group_by(.data$set) %>%
     slice_min(.data$x, n = 1) %>%
     ungroup() %>%
     mutate(set = .data$set - 1) %>%
     pivot_longer(-.data$set) -> next_set
   sets %>%
-    select(-.data$classification, -.data$effect) %>%
+    select(-"classification", -"effect") %>%
     group_by(.data$set) %>%
     slice_max(.data$x) %>%
     ungroup() %>%
