@@ -28,6 +28,8 @@ Imports:
 Suggests:
     gistr
 Additional_repositories: https://inbo.r-universe.dev
+Config/checklist/communities: inbo
+Config/checklist/keywords: uncertainty; trend; figure
 Encoding: UTF-8
 Language: en-GB
 Roxygen: list(markdown = TRUE)

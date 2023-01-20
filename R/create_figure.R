@@ -275,7 +275,7 @@ en interpretatie"
     if (!ci %in% c("band", "gradient")) {
       p <- p +
         geom_line(aes(linetype = "schatting")) +
-        scale_linetype("")
+        scale_linetype_manual("")
     }
   }
   p
