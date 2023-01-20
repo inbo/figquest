@@ -1,5 +1,7 @@
+\.quarto
 ^.*\.Rproj$
 ^CITATION\.cff$
+^Dockerfile$
 ^LICENSE.md$
 ^README\.Rmd$
 ^\.Rproj\.user$
@@ -10,6 +12,7 @@
 ^checklist.yml$
 ^codecov\.yml$
 ^data-raw$
+^docker$
 ^docs$
 ^man-roxygen$
 ^pkgdown$
