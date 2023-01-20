@@ -12,6 +12,9 @@ max_interpretation <- 4
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "inbo_report.css")
+  ),
   tabsetPanel(
     id = "hidden_tabs", type = "hidden",
     tabPanelBody(
