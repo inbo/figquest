@@ -159,8 +159,11 @@ Ditmaal in de stijl waar jouw voorkeur naar uitgaat.",
 server <- function(input, output, session) {
 
   root <- tempfile(session$token)
-  dir.create(root, showWarnings = FALSE, recursive = TRUE)
-  gist_id <- "263716f8d0f10f96531a45f52ba9472a"
+  gist_id <- Sys.getenv("GIST_ID")
+  file.path(root, gist_id) |>
+    dir.create(showWarnings = FALSE, recursive = TRUE)
+  file.path(root, gist_id) |>
+    prepare_gist(gist_id = gist_id)
 
   data <- reactiveValues(
     answer = numeric(0),
@@ -235,7 +238,8 @@ interpreteren ten opzichte van het referentiejaar 2000?"
           tail(data$preferred, -1),
           list(
             size = c("stable", "strong", "potential"), reference = "none",
-            ci = "none", effect = "none", threshold = log(c(0.9, 0.75))
+            ci = "none", effect = "none",
+            threshold = round(log(c(0.9, 0.75)), 4)
           )
         ),
         max_question = max_interpretation
@@ -246,7 +250,7 @@ interpreteren ten opzichte van het referentiejaar 2000?"
       data$design <- generate_design(
         design_effect = list(y_label = c("index", "change")),
         design_data = list(
-          size = "strong", threshold = log(0.75), reference = "none",
+          size = "strong", threshold = round(log(0.75), 4), reference = "none",
           ci = "none", effect = "none"
         ),
         max_question = max_question
@@ -260,7 +264,7 @@ interpreteren ten opzichte van het referentiejaar 2000?"
           data$preferred,
           list(
             size = c("stable", "moderate", "strong"), ci = "none",
-            threshold = log(c(0.9, 0.75)), effect = "none"
+            threshold = round(log(c(0.9, 0.75)), 4), effect = "none"
           )
         ),
         max_question = max_question
@@ -274,7 +278,7 @@ interpreteren ten opzichte van het referentiejaar 2000?"
           data$preferred,
           list(
             size = c("stable", "moderate", "strong", "potential"),
-            threshold = log(c(0.9, 0.75)), effect = "none"
+            threshold = round(log(c(0.9, 0.75)), 4), effect = "none"
           )
         ),
         max_question = max_question
@@ -295,7 +299,7 @@ interpreteren ten opzichte van het referentiejaar 2000?"
           data$preferred,
           list(
             size = c("moderate", "strong", "potential"),
-            threshold = log(c(0.9, 0.75))
+            threshold = round(log(c(0.9, 0.75)), 4)
           )
         ),
         max_question = max_question
@@ -317,7 +321,7 @@ interpreteren ten opzichte van het referentiejaar 2000?"
           tail(data$preferred, -1),
           list(
             size = c("stable", "strong", "potential"),
-            threshold = log(c(0.9, 0.75))
+            threshold = round(log(c(0.9, 0.75)), 4)
           )
         ),
         max_question = max_interpretation
@@ -496,7 +500,8 @@ interpreteren ten opzichte van het referentiejaar 2000?"
         bind_rows(
           read_vc(
             paste0("preference_", data$level),
-            root = file.path(root, gist_id))
+            root = file.path(root, gist_id)
+          )
         ) %>%
         write_vc(
           paste0("preference_", data$level), root = file.path(root, gist_id),
@@ -593,10 +598,14 @@ interpreteren ten opzichte van het referentiejaar 2000?"
     data.frame(
       session = session$token, timestamp = Sys.time(),
       threshold = attr(data$dataset, "threshold"),
-      f_down = attr(data$dataset, "f_down"),
-      f_up = attr(data$dataset, "f_up"),
-      flip = attr(data$dataset, "flip"),
-      direction = attr(data$dataset, "direction"),
+      f_down = attr(data$dataset, "f_down") |>
+        round(4),
+      f_up = attr(data$dataset, "f_up") |>
+        round(4),
+      flip = attr(data$dataset, "flip") |>
+        as.integer(),
+      direction = attr(data$dataset, "direction") |>
+        as.integer(),
       size = factor(
         data$design$size[data$question],
         levels = c("stable", "moderate", "strong", "potential")
@@ -616,10 +625,11 @@ interpreteren ten opzichte van het referentiejaar 2000?"
         levels = c(
         "none", "symbol", "colour symbol", "colour ci", "symbol + colour ci"
       )),
-      year = attr(data$dataset, "selected_year"),
-      correct = data$dataset$classification[
+      year = attr(data$dataset, "selected_year") |>
+        as.integer(),
+      correct = as.character(data$dataset$classification[
         data$dataset$x == attr(data$dataset, "selected_year")
-      ],
+      ]),
       answer = factor(
         input$interpretation,
         levels = c(
@@ -680,6 +690,89 @@ calc_preferred <- function(ds, answer) {
     summarise(score = mean(.data$answer), .groups = "drop") %>%
     slice_max(.data$score, n = 1, with_ties = FALSE) -> pref
   setNames(pref$value, pref$name)
+}
+
+prepare_gist <- function(root, gist_id) {
+  gist(gist_id) %>%
+    gist_save(path = root)
+  if (!is_git2rdata("exam", root)) {
+
+    data.frame(
+      session = character(0), timestamp = Sys.time()[-1],
+      threshold = numeric(0), f_down = numeric(0), f_up = numeric(0),
+      flip = integer(0), direction = integer(0), year = integer(0),
+      y_label = factor(character(0), levels = c("change", "index")),
+      correct = character(0),
+      answer = factor(character(0), levels = c("+", "-", "~", "?", "x")),
+      size = factor(
+        character(0), levels = c("stable", "moderate", "strong", "potential")
+      ),
+      reference = factor(
+        character(0), levels = c("none", "lines", "lines + text")
+      ),
+      ci = factor(character(0), levels = c("none", "band", "gradient")),
+      effect = factor(
+        character(0),
+        levels = c(
+          "none", "symbol", "colour symbol", "colour ci", "symbol + colour ci"
+        )
+      )
+    ) |>
+      write_vc("exam", root = root, sorting = c("session", "timestamp"))
+  }
+  if (!is_git2rdata("intro", root)) {
+    data.frame(
+      session = character(0), timestamp = Sys.time()[-1],
+      math = factor(character(0), levels = c("not", "low", "medium", "high")),
+      stats = factor(character(0), levels = c("not", "low", "medium", "high")),
+      colourblind = factor(character(0), levels = c("yes", "no", "no answer"))
+    ) |>
+      write_vc("intro", root = root, sorting = c("session", "timestamp"))
+  }
+  if (!is_git2rdata("preference_3", root)) {
+    data.frame(
+      session = character(0), timestamp = Sys.time()[-1], id = integer(0),
+      size = character(0), threshold = numeric(0), reference = character(0),
+      ci = character(0), effect = character(0), y_label_a = character(0),
+      y_label_b = character(0), answer = numeric(0)
+    ) |>
+      write_vc(
+        "preference_3", root = root, sorting = c("session", "timestamp", "id"),
+      )
+  }
+  if (!is_git2rdata("preference_4", root)) {
+    data.frame(
+      session = character(0), timestamp = Sys.time()[-1], id = integer(0),
+      size = character(0), threshold = numeric(0), reference_a = character(0),
+      reference_b = character(0), ci = character(0), effect = character(0),
+      y_label = character(0), answer = numeric(0)
+    ) |>
+      write_vc(
+        "preference_4", root = root, sorting = c("session", "timestamp", "id")
+      )
+  }
+  if (!is_git2rdata("preference_5", root)) {
+    data.frame(
+      session = character(0), timestamp = Sys.time()[-1], id = integer(0),
+      size = character(0), threshold = numeric(0), reference = character(0),
+      ci_a = character(0), ci_b = character(0), effect = character(0),
+      y_label = character(0), answer = numeric(0)
+    ) |>
+      write_vc(
+        "preference_5", root = root, sorting = c("session", "timestamp", "id")
+      )
+  }
+  if (!is_git2rdata("preference_6", root)) {
+    data.frame(
+      session = character(0), timestamp = Sys.time()[-1], id = integer(0),
+      size = character(0), threshold = numeric(0), reference = character(0),
+      ci = character(0), effect_a = character(0), effect_b = character(0),
+      y_label = character(0), answer = numeric(0)
+    ) |>
+      write_vc(
+        "preference_6", root = root, sorting = c("session", "timestamp", "id")
+      )
+  }
 }
 
 # Run the application

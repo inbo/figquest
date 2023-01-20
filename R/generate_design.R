@@ -42,7 +42,8 @@ generate_design <- function(design_effect, design_data, max_question = 10) {
   if (nrow(combs) <= max_question) {
     combs |>
       inner_join(design, by = "id") |>
-      randomize_alternative() -> selection
+      randomize_alternative() |>
+      mutate(id = row_number()) -> selection
     return(selection)
   }
   combs_data <- expand.grid(design_data)
@@ -60,7 +61,8 @@ generate_design <- function(design_effect, design_data, max_question = 10) {
   combs_data[head(sample_data, max_question), , drop = FALSE] |>
     cbind(id = head(sample_effect, max_question)) |>
     inner_join(design, by = "id") |>
-    randomize_alternative()
+    randomize_alternative() |>
+    mutate(id = row_number())
 }
 
 randomize_alternative <- function(z) {
