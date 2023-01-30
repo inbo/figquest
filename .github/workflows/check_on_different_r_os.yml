@@ -66,6 +66,11 @@ jobs:
           sudo -s eval "$sysreqs"
           sudo apt-get install -y libcurl4-openssl-dev
 
+      - name: Install system dependencies
+        if: runner.os == 'macOS'
+        run: |
+          brew install libgit2
+
       - name: Install dependencies
         run: |
           remotes::install_deps(dependencies = TRUE,
