@@ -3,7 +3,6 @@ library(figquest)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-library(gistr)
 library(git2rdata)
 library(INBOtheme)
 
@@ -30,25 +29,25 @@ referentiejaar.
 In de voorbeelden die we geven is dit het jaar 2000.
 Met deze vragenlijst willen we onderzoeken wat voor figuur hiervoor het meest
 geschikt is.
-We starten met onderstaande vragen over jou.
-Daarmee willen we onderzoeken of er een verband is tussen jouw kennis en jouw
+We starten met onderstaande vragen over u.
+Daarmee willen we onderzoeken of er een verband is tussen uw kennis en uw
 voorkeuren wat betreft figuren.
-Vervolgens vragen we je om %i standaard figuren te interpreteren (multiple
+Vervolgens vragen we u om %i standaard figuren te interpreteren (multiple
 choice).
-Daarna geven we je in 4 stappen de mogelijkheid om de figuren te verbeteren.
-Hiertoe krijg je telkens 2 figuren naast elkaar te zien die op basis van een
+Daarna geven we u in 4 stappen de mogelijkheid om de figuren te verbeteren.
+Hiertoe krijgt u telkens 2 figuren naast elkaar te zien die op basis van een
 stijlkenmerk van elkaar verschillen.
 De gegevens in beide figuren zijn identiek.
 Voor elk van deze stappen tonen we maximum %i paren van figuren.
-Tenslotte leggen we je terug %i figuren ter interpretatie voor.
-Ditmaal in de stijl waar jouw voorkeur naar uitgaat.",
+Tenslotte leggen we u terug %i figuren ter interpretatie voor.
+Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
             max_interpretation, max_question, max_interpretation
           ),
           width = 10, offset = 1
         )
       ),
       fluidRow(
-        column(h2("Een beetje achtergrond over jou"), width = 10, offset = 1)
+        column(h2("Een beetje achtergrond over u"), width = 10, offset = 1)
       ),
       fluidRow(
         column(
@@ -161,12 +160,7 @@ Ditmaal in de stijl waar jouw voorkeur naar uitgaat.",
 # nolint start: cyclocomp_linter.
 server <- function(input, output, session) {
 
-  root <- tempfile(session$token)
-  gist_id <- Sys.getenv("GIST_ID")
-  file.path(root, gist_id) |>
-    dir.create(showWarnings = FALSE, recursive = TRUE)
-  file.path(root, gist_id) |>
-    prepare_gist(gist_id = gist_id)
+  root <- Sys.getenv("FIGQUEST_DATA", unset = ".")
 
   data <- reactiveValues(
     answer = numeric(0),
@@ -493,29 +487,15 @@ interpreteren ten opzichte van het referentiejaar 2000?"
       updateTabsetPanel(
         session = session, inputId = "hidden_tabs", selected = "intermediate"
       )
-      gist(gist_id) %>%
-        gist_save(path = root)
-      data$design %>%
+      data$design |>
         mutate(
           answer = data$answer, session = session$token, timestamp = Sys.time()
-        ) %>%
-        select(-matches("_id$")) %>%
-        bind_rows(
-          read_vc(
-            paste0("preference_", data$level),
-            root = file.path(root, gist_id)
-          )
-        ) %>%
+        ) |>
+        select(-matches("_id$")) |>
         write_vc(
-          paste0("preference_", data$level), root = file.path(root, gist_id),
+          sprintf("preference_%i_%s", data$level, session$token), root = root,
           sorting = c("session", "timestamp", "id")
         )
-      gist(gist_id) %>%
-        update_files(
-          file.path(root, gist_id, paste0("preference_", data$level, ".tsv")),
-          file.path(root, gist_id, paste0("preference_", data$level, ".yml"))
-        ) %>%
-        update()
       data$preferred <- c(
         data$preferred, calc_preferred(data$design, data$answer)
       )
@@ -539,8 +519,6 @@ interpreteren ten opzichte van het referentiejaar 2000?"
     updateTabsetPanel(
       session = session, inputId = "hidden_tabs", selected = "intermediate"
     )
-    gist(gist_id) %>%
-      gist_save(path = root)
     data.frame(
       session = session$token, timestamp = Sys.time(),
       math = factor(
@@ -562,20 +540,11 @@ interpreteren ten opzichte van het referentiejaar 2000?"
         levels = c("ja", "nee", "wil ik liever niet vertellen"),
         labels = c("yes", "no", "no answer")
       )
-    ) %>%
-      bind_rows(
-        read_vc("intro", file.path(root, gist_id))
-      ) %>%
+    ) |>
       write_vc(
-        "intro", root = file.path(root, gist_id),
-        sorting = c("session", "timestamp")
+        sprintf("intro_%s", session$token), sorting = c("session", "timestamp"),
+        root = root
       )
-    gist(gist_id) %>%
-      update_files(
-        file.path(root, gist_id, "intro.tsv"),
-        file.path(root, gist_id, "intro.yml")
-      ) %>%
-      update()
     data$level <- data$level + 1
   })
 
@@ -651,19 +620,11 @@ interpreteren ten opzichte van het referentiejaar 2000?"
       updateTabsetPanel(
         session = session, inputId = "hidden_tabs", selected = "intermediate"
       )
-      gist(gist_id) %>%
-        gist_save(path = root)
-      read_vc("exam", root = file.path(root, gist_id)) %>%
-        bind_rows(data$interpretation) %>%
+      bind_rows(data$interpretation) |>
         write_vc(
-          "exam", root = file.path(root, gist_id),
-          sorting = c("session", "timestamp"))
-      gist(gist_id) %>%
-        update_files(
-          file.path(root, gist_id, "exam.tsv"),
-          file.path(root, gist_id, "exam.yml")
-        ) %>%
-        update()
+          sprintf("exam_%s", session$token), root = root,
+          sorting = c("session", "timestamp")
+        )
       data$interpretation <- list()
       data$level <- data$level + 1
       data$question <- NULL
@@ -686,96 +647,13 @@ calc_preferred <- function(ds, answer) {
   ds %>%
     select(matches("_[ab]$")) %>%
     mutate(answer = answer) %>%
-    pivot_longer(-.data$answer) %>%
+    pivot_longer(-"answer") %>%
     extract(.data$name, c("name", "plot"), "(.*)_([ab])$") %>%
     mutate(answer = ifelse(.data$plot == "a", -1, 1) * .data$answer) %>%
     group_by(.data$name, .data$value) %>%
     summarise(score = mean(.data$answer), .groups = "drop") %>%
     slice_max(.data$score, n = 1, with_ties = FALSE) -> pref
   setNames(pref$value, pref$name)
-}
-
-prepare_gist <- function(root, gist_id) {
-  gist(gist_id) %>%
-    gist_save(path = root)
-  if (!is_git2rdata("exam", root)) {
-
-    data.frame(
-      session = character(0), timestamp = Sys.time()[-1],
-      threshold = numeric(0), f_down = numeric(0), f_up = numeric(0),
-      flip = integer(0), direction = integer(0), year = integer(0),
-      y_label = factor(character(0), levels = c("change", "index")),
-      correct = character(0),
-      answer = factor(character(0), levels = c("+", "-", "~", "?", "x")),
-      size = factor(
-        character(0), levels = c("stable", "moderate", "strong", "potential")
-      ),
-      reference = factor(
-        character(0), levels = c("none", "lines", "lines + text")
-      ),
-      ci = factor(character(0), levels = c("none", "band", "gradient")),
-      effect = factor(
-        character(0),
-        levels = c(
-          "none", "symbol", "colour symbol", "colour ci", "symbol + colour ci"
-        )
-      )
-    ) |>
-      write_vc("exam", root = root, sorting = c("session", "timestamp"))
-  }
-  if (!is_git2rdata("intro", root)) {
-    data.frame(
-      session = character(0), timestamp = Sys.time()[-1],
-      math = factor(character(0), levels = c("not", "low", "medium", "high")),
-      stats = factor(character(0), levels = c("not", "low", "medium", "high")),
-      colourblind = factor(character(0), levels = c("yes", "no", "no answer"))
-    ) |>
-      write_vc("intro", root = root, sorting = c("session", "timestamp"))
-  }
-  if (!is_git2rdata("preference_3", root)) {
-    data.frame(
-      session = character(0), timestamp = Sys.time()[-1], id = integer(0),
-      size = character(0), threshold = numeric(0), reference = character(0),
-      ci = character(0), effect = character(0), y_label_a = character(0),
-      y_label_b = character(0), answer = numeric(0)
-    ) |>
-      write_vc(
-        "preference_3", root = root, sorting = c("session", "timestamp", "id"),
-      )
-  }
-  if (!is_git2rdata("preference_4", root)) {
-    data.frame(
-      session = character(0), timestamp = Sys.time()[-1], id = integer(0),
-      size = character(0), threshold = numeric(0), reference_a = character(0),
-      reference_b = character(0), ci = character(0), effect = character(0),
-      y_label = character(0), answer = numeric(0)
-    ) |>
-      write_vc(
-        "preference_4", root = root, sorting = c("session", "timestamp", "id")
-      )
-  }
-  if (!is_git2rdata("preference_5", root)) {
-    data.frame(
-      session = character(0), timestamp = Sys.time()[-1], id = integer(0),
-      size = character(0), threshold = numeric(0), reference = character(0),
-      ci_a = character(0), ci_b = character(0), effect = character(0),
-      y_label = character(0), answer = numeric(0)
-    ) |>
-      write_vc(
-        "preference_5", root = root, sorting = c("session", "timestamp", "id")
-      )
-  }
-  if (!is_git2rdata("preference_6", root)) {
-    data.frame(
-      session = character(0), timestamp = Sys.time()[-1], id = integer(0),
-      size = character(0), threshold = numeric(0), reference = character(0),
-      ci = character(0), effect_a = character(0), effect_b = character(0),
-      y_label = character(0), answer = numeric(0)
-    ) |>
-      write_vc(
-        "preference_6", root = root, sorting = c("session", "timestamp", "id")
-      )
-  }
 }
 
 # Run the application

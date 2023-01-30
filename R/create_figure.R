@@ -25,7 +25,7 @@
 #' @importFrom dplyr %>% mutate
 #' @importFrom ggplot2 aes annotate element_blank geom_hline geom_line
 #' geom_point geom_ribbon geom_text geom_vline ggplot guides guide_legend
-#' labs scale_colour_manual scale_fill_manual scale_linetype_manual
+#' labs scale_colour_manual scale_fill_manual scale_linetype
 #' scale_x_continuous scale_y_log10 theme unit
 #' @importFrom rlang .data
 #' @importFrom stats setNames
@@ -275,7 +275,7 @@ en interpretatie"
     if (!ci %in% c("band", "gradient")) {
       p <- p +
         geom_line(aes(linetype = "schatting")) +
-        scale_linetype_manual("")
+        scale_linetype("")
     }
   }
   p
