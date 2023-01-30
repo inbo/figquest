@@ -1,3 +1,7 @@
+# figquest 0.1.0
+
+* Store the data on the local file system.
+
 # figquest 0.0.1
 
 * Added `generate_design()`, `generate_data()` and `create_figure()`.
