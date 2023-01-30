@@ -21,4 +21,4 @@ abstract: This contains the Shiny app and the related functions.
 identifiers:
 - type: url
   value: []
-version: 0.1.0
+version: 0.1.1
