@@ -52,7 +52,7 @@ Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
       fluidRow(
         column(
           radioButtons(
-            "math", "Hoe vertrouwd voel jij je met cijfers?", inline = TRUE,
+            "math", "Hoe vertrouwd voelt u zicht met cijfers?", inline = TRUE,
             selected = character(0),
             choices = c(
               "niet vertrouwd", "weinig vertrouwd", "vertrouwd",
@@ -65,7 +65,7 @@ Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
       fluidRow(
         column(
           radioButtons(
-            "stats", "Hoe vertrouwd voel jij je met statistiek?", inline = TRUE,
+            "stats", "Hoe vertrouwd voelt u zich met statistiek?", inline = TRUE,
             selected = character(0),
             choices = c(
               "niet vertrouwd", "weinig vertrouwd", "vertrouwd",
@@ -78,7 +78,7 @@ Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
       fluidRow(
         column(
           radioButtons(
-            "colourblind", "Ben je kleurenblind?", inline = TRUE,
+            "colourblind", "Bent u kleurenblind?", inline = TRUE,
             selected = character(0),
             choices = c("ja", "nee", "wil ik liever niet vertellen")
           ),
@@ -101,7 +101,7 @@ Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
       fluidRow(
         column(
           radioButtons(
-            "preference", "Jouw voorkeur", inline = TRUE,
+            "preference", "Uw voorkeur", inline = TRUE,
             selected = character(0), choiceValues = 1:6 - mean(1:6),
             choiceNames = c(
               "zeker A", "eerder A", "misschien A", "misschien B", "eerder B",
@@ -120,7 +120,9 @@ Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
     tabPanelBody(
       "exam",
       fluidRow(
-        column(h2("Interpreteren van een figuur"), width = 10, offset = 1)
+        column(
+          h2("Interpreteren van een figuur"), width = 10, offset = 1
+        )
       ),
       fluidRow(
         column(htmlOutput("question_exam"), width = 10, offset = 1)
@@ -128,7 +130,7 @@ Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
       fluidRow(
         column(
           radioButtons(
-            "interpretation", "Jouw interpretatie", inline = TRUE,
+            "interpretation", "Uw interpretatie", inline = TRUE,
             selected = character(0),
             choices = c(
               "toename t.o.v. 2000", "afname t.o.v. 2000",
