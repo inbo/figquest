@@ -1791,7 +1791,7 @@ table {
   -webkit-box-shadow:none!important;
   box-shadow:none!important;
   position:relative;
-  font-size:14px
+  font-size:20px
 }
 .book .book-header .btn:hover {
   position:relative;
@@ -2580,4 +2580,27 @@ body {
   --header-color: #356196;
   --header-background-color: #FFFFFF;
   --alert-block-color: #C04384;
+}
+
+.btn-default {
+  color: var(--header-background-color);
+  background-color: var(--header-color);
+  border-color: #bdddd7;
+}
+.btn {
+  display: inline-block;
+  margin-bottom: 0;
+  font-weight: 400;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  touch-action: manipulation;
+  cursor: pointer;
+  background-image: none;
+  border: 6px solid transparent;
+  padding: 12px 24px;
+  font-size: 20px;
+  line-height: 1.42857143;
+  border-radius: 6px;
+  user-select: none;
 }
