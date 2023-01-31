@@ -34,15 +34,20 @@ ui <- fluidPage(
       fluidRow(column(h1("Inleiding"), width = 10, offset = 1)),
       fluidRow(
         column(
+  "Het INBO publiceert een aantal natuurindicatoren waarbij we allerhande trends
+  grafisch weergeven.
+  Deze trends worden uitgedrukt als een wijziging ten opzichte van een
+  referentiejaar.
+  In de voorbeelden die we geven is dit het jaar 2000.
+  Met deze vragenlijst willen we onderzoeken wat voor figuur hiervoor het meest
+  geschikt is.",
+          class = "question", width = 10, offset = 1
+        )
+      ),
+      fluidRow(
+        column(
           sprintf(
-"Het INBO publiceert een aantal natuurindicatoren waarbij we allerhande trends
-grafisch weergeven.
-Deze trends worden uitgedrukt als een wijziging ten opzichte van een
-referentiejaar.
-In de voorbeelden die we geven is dit het jaar 2000.
-Met deze vragenlijst willen we onderzoeken wat voor figuur hiervoor het meest
-geschikt is.
-We starten met onderstaande vragen over u.
+"We starten met onderstaande vragen over u.
 Daarmee willen we onderzoeken of er een verband is tussen uw kennis en uw
 voorkeuren wat betreft figuren.
 Vervolgens vragen we u om %i standaard figuren te interpreteren (multiple
