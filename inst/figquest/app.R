@@ -12,6 +12,19 @@ max_interpretation <- 4
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   tags$head(
+    tags$script('
+        var dimension = [0, 0];
+        $(document).on("shiny:connected", function(e) {
+            dimension[0] = window.innerWidth;
+            dimension[1] = window.innerHeight;
+            Shiny.onInputChange("dimension", dimension);
+        });
+        $(window).resize(function(e) {
+            dimension[0] = window.innerWidth;
+            dimension[1] = window.innerHeight;
+            Shiny.onInputChange("dimension", dimension);
+        });
+    '),
     tags$link(rel = "stylesheet", type = "text/css", href = "inbo_report.css")
   ),
   tabsetPanel(
@@ -21,15 +34,20 @@ ui <- fluidPage(
       fluidRow(column(h1("Inleiding"), width = 10, offset = 1)),
       fluidRow(
         column(
+  "Het INBO publiceert een aantal natuurindicatoren waarbij we allerhande trends
+  grafisch weergeven.
+  Deze trends worden uitgedrukt als een wijziging ten opzichte van een
+  referentiejaar.
+  In de voorbeelden die we geven is dit het jaar 2000.
+  Met deze vragenlijst willen we onderzoeken wat voor figuur hiervoor het meest
+  geschikt is.",
+          class = "question", width = 10, offset = 1
+        )
+      ),
+      fluidRow(
+        column(
           sprintf(
-"Het INBO publiceert een aantal natuurindicatoren waarbij we allerhande trends
-grafisch weergeven.
-Deze trends worden uitgedrukt als een wijziging ten opzichte van een
-referentiejaar.
-In de voorbeelden die we geven is dit het jaar 2000.
-Met deze vragenlijst willen we onderzoeken wat voor figuur hiervoor het meest
-geschikt is.
-We starten met onderstaande vragen over u.
+"We starten met onderstaande vragen over u.
 Daarmee willen we onderzoeken of er een verband is tussen uw kennis en uw
 voorkeuren wat betreft figuren.
 Vervolgens vragen we u om %i standaard figuren te interpreteren (multiple
@@ -43,7 +61,7 @@ Tenslotte leggen we u terug %i figuren ter interpretatie voor.
 Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
             max_interpretation, max_question, max_interpretation
           ),
-          width = 10, offset = 1
+          class = "question", width = 10, offset = 1
         )
       ),
       fluidRow(
@@ -52,7 +70,7 @@ Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
       fluidRow(
         column(
           radioButtons(
-            "math", "Hoe vertrouwd voel jij je met cijfers?", inline = TRUE,
+            "math", "Hoe vertrouwd voelt u zicht met cijfers?", inline = TRUE,
             selected = character(0),
             choices = c(
               "niet vertrouwd", "weinig vertrouwd", "vertrouwd",
@@ -65,8 +83,8 @@ Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
       fluidRow(
         column(
           radioButtons(
-            "stats", "Hoe vertrouwd voel jij je met statistiek?", inline = TRUE,
-            selected = character(0),
+            "stats", "Hoe vertrouwd voelt u zich met statistiek?",
+            inline = TRUE, selected = character(0),
             choices = c(
               "niet vertrouwd", "weinig vertrouwd", "vertrouwd",
               "zeer vertrouwd"
@@ -78,7 +96,7 @@ Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
       fluidRow(
         column(
           radioButtons(
-            "colourblind", "Ben je kleurenblind?", inline = TRUE,
+            "colourblind", "Bent u kleurenblind?", inline = TRUE,
             selected = character(0),
             choices = c("ja", "nee", "wil ik liever niet vertellen")
           ),
@@ -96,12 +114,15 @@ Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
         )
       ),
       fluidRow(
-        column(htmlOutput("question_text"), width = 10, offset = 1)
+        column(
+          htmlOutput("question_text", class = "question"), width = 10,
+          offset = 1
+        )
       ),
       fluidRow(
         column(
           radioButtons(
-            "preference", "Jouw voorkeur", inline = TRUE,
+            "preference", "Uw voorkeur", inline = TRUE,
             selected = character(0), choiceValues = 1:6 - mean(1:6),
             choiceNames = c(
               "zeker A", "eerder A", "misschien A", "misschien B", "eerder B",
@@ -120,7 +141,9 @@ Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
     tabPanelBody(
       "exam",
       fluidRow(
-        column(h2("Interpreteren van een figuur"), width = 10, offset = 1)
+        column(
+          h2("Interpreteren van een figuur"), width = 10, offset = 1
+        )
       ),
       fluidRow(
         column(htmlOutput("question_exam"), width = 10, offset = 1)
@@ -128,7 +151,7 @@ Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
       fluidRow(
         column(
           radioButtons(
-            "interpretation", "Jouw interpretatie", inline = TRUE,
+            "interpretation", "Uw interpretatie", inline = TRUE,
             selected = character(0),
             choices = c(
               "toename t.o.v. 2000", "afname t.o.v. 2000",
@@ -172,27 +195,33 @@ server <- function(input, output, session) {
     level_question = c(
 "",
 "Hoe zou u de toestand van %i (ter hoogte van verticale stippellijn)
-interpreteren ten opzichte van het referentiejaar 2000?",
+interpreteren ten opzichte van het referentiejaar 2000?
+<br><b>vraag 2 van 7</b>",
 "Verkiest u labels op de y as als een index of als een relatief verschil?
 Bij een index vermenigvuldigen we de cijfers met een vast getal zodat de waarde
 in het referentiejaar gelijk is aan 100.
 Bij een relatief verschil geven we de procentuele wijziging ten opzichte van
-de waarde in het referentiejaar.",
+de waarde in het referentiejaar.
+<br><b>vraag 3 van 7</b>",
 "Beide figuren zijn een andere manier van weergave van dezelfde tijdreeks.
 In dit geval verschillen ze in de manier waarop we referentielijnen weergeven.
 We nemen uw voorkeur uit eerdere antwoorden mee.
-Welke figuur kan u het makkelijkst interpreteren?",
+Welke figuur kan u het makkelijkst interpreteren?
+<br><b>vraag 4 van 7</b>",
 "Beide figuren zijn een andere manier van weergave van de dezelfde tijdreeks.
 In dit geval verschillen ze in de manier waarop we onzekerheid weergeven.
 We nemen uw voorkeur uit eerdere antwoorden mee.
-Welke figuur kan u het makkelijkst interpreteren?",
+Welke figuur kan u het makkelijkst interpreteren?
+<br><b>vraag 5 van 7</b>",
 "Beide figuren zijn een andere manier van weergave van de dezelfde tijdreeks.
 In dit geval verschillen ze in de manier waarop we de interpretatie van het
 effect weergeven.
 We nemen uw voorkeur uit eerdere antwoorden mee.
-Welke figuur kan u het makkelijkst interpreteren?",
+Welke figuur kan u het makkelijkst interpreteren?
+<br><b>vraag 6 van 7</b>",
 "Hoe zou u de toestand van %i (ter hoogte van verticale stippellijn)
-interpreteren ten opzichte van het referentiejaar 2000?"
+interpreteren ten opzichte van het referentiejaar 2000?
+<br><b>deel 7 van 7</b>"
 ),
     preferred = list(),
     question = NULL
@@ -489,7 +518,8 @@ interpreteren ten opzichte van het referentiejaar 2000?"
       )
       data$design |>
         mutate(
-          answer = data$answer, session = session$token, timestamp = Sys.time()
+          answer = data$answer, session = session$token, timestamp = Sys.time(),
+          width = input$dimension[1], height = input$dimension[2]
         ) |>
         select(-matches("_id$")) |>
         write_vc(
@@ -539,7 +569,8 @@ interpreteren ten opzichte van het referentiejaar 2000?"
         input$colourblind,
         levels = c("ja", "nee", "wil ik liever niet vertellen"),
         labels = c("yes", "no", "no answer")
-      )
+      ),
+      width = input$dimension[1], height = input$dimension[2]
     ) |>
       write_vc(
         sprintf("intro_%s", session$token), sorting = c("session", "timestamp"),
@@ -621,6 +652,7 @@ interpreteren ten opzichte van het referentiejaar 2000?"
         session = session, inputId = "hidden_tabs", selected = "intermediate"
       )
       bind_rows(data$interpretation) |>
+        mutate(width = input$dimension[1], height = input$dimension[2]) |>
         write_vc(
           sprintf("exam_%s", session$token), root = root,
           sorting = c("session", "timestamp")

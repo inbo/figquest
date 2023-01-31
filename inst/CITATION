@@ -2,12 +2,12 @@ citHeader("To cite `figquest` in publications please use:")
 # begin checklist entry
 citEntry(
   entry = "Manual",
-  title = "figquest: A Shiny Questionaire on Trend Figures. Version 0.1.0",
+  title = "figquest: A Shiny Questionaire on Trend Figures. Version 0.1.1",
   author = c( author = c(person(given = "Thierry", family = "Onkelinx"))),
   year = 2023,
   url = "https://github.com/inbo/figquest/",
   abstract = "This contains the Shiny app and the related functions.",
-  textVersion = "Onkelinx, Thierry (2023) figquest: A Shiny Questionaire on Trend Figures. Version 0.1.0. https://github.com/inbo/figquest/",
+  textVersion = "Onkelinx, Thierry (2023) figquest: A Shiny Questionaire on Trend Figures. Version 0.1.1. https://github.com/inbo/figquest/",
   keywords = "uncertainty; trend; figure",
 )
 # end checklist entry
