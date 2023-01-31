@@ -1791,7 +1791,7 @@ table {
   -webkit-box-shadow:none!important;
   box-shadow:none!important;
   position:relative;
-  font-size:20px
+  font-size:16px
 }
 .book .book-header .btn:hover {
   position:relative;
@@ -2465,9 +2465,12 @@ body {
   text-rendering:optimizeLegibility;
   font-smoothing:antialiased;
   font-family:flanders_art_sans, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size:14px;
+  font-size:16px;
   letter-spacing:.2px;
   text-size-adjust:100%
+}
+.question {
+  max-width: 1000px;
 }
 .book .book-summary ul.summary li a span {
   display:inline;
@@ -2599,7 +2602,7 @@ body {
   background-image: none;
   border: 6px solid transparent;
   padding: 12px 24px;
-  font-size: 20px;
+  font-size: 16px;
   line-height: 1.42857143;
   border-radius: 6px;
   user-select: none;

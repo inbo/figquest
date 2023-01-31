@@ -43,7 +43,7 @@ Tenslotte leggen we u terug %i figuren ter interpretatie voor.
 Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
             max_interpretation, max_question, max_interpretation
           ),
-          width = 10, offset = 1
+          class = "question", width = 10, offset = 1
         )
       ),
       fluidRow(
@@ -96,7 +96,10 @@ Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
         )
       ),
       fluidRow(
-        column(htmlOutput("question_text"), width = 10, offset = 1)
+        column(
+          htmlOutput("question_text", class = "question"), width = 10,
+          offset = 1
+        )
       ),
       fluidRow(
         column(
@@ -174,27 +177,33 @@ server <- function(input, output, session) {
     level_question = c(
 "",
 "Hoe zou u de toestand van %i (ter hoogte van verticale stippellijn)
-interpreteren ten opzichte van het referentiejaar 2000?",
+interpreteren ten opzichte van het referentiejaar 2000?
+<br><b>vraag 2 van 7</b>",
 "Verkiest u labels op de y as als een index of als een relatief verschil?
 Bij een index vermenigvuldigen we de cijfers met een vast getal zodat de waarde
 in het referentiejaar gelijk is aan 100.
 Bij een relatief verschil geven we de procentuele wijziging ten opzichte van
-de waarde in het referentiejaar.",
+de waarde in het referentiejaar.
+<br><b>vraag 3 van 7</b>",
 "Beide figuren zijn een andere manier van weergave van dezelfde tijdreeks.
 In dit geval verschillen ze in de manier waarop we referentielijnen weergeven.
 We nemen uw voorkeur uit eerdere antwoorden mee.
-Welke figuur kan u het makkelijkst interpreteren?",
+Welke figuur kan u het makkelijkst interpreteren?
+<br><b>vraag 4 van 7</b>",
 "Beide figuren zijn een andere manier van weergave van de dezelfde tijdreeks.
 In dit geval verschillen ze in de manier waarop we onzekerheid weergeven.
 We nemen uw voorkeur uit eerdere antwoorden mee.
-Welke figuur kan u het makkelijkst interpreteren?",
+Welke figuur kan u het makkelijkst interpreteren?
+<br><b>vraag 5 van 7</b>",
 "Beide figuren zijn een andere manier van weergave van de dezelfde tijdreeks.
 In dit geval verschillen ze in de manier waarop we de interpretatie van het
 effect weergeven.
 We nemen uw voorkeur uit eerdere antwoorden mee.
-Welke figuur kan u het makkelijkst interpreteren?",
+Welke figuur kan u het makkelijkst interpreteren?
+<br><b>vraag 6 van 7</b>",
 "Hoe zou u de toestand van %i (ter hoogte van verticale stippellijn)
-interpreteren ten opzichte van het referentiejaar 2000?"
+interpreteren ten opzichte van het referentiejaar 2000?
+<br><b>deel 7 van 7</b>"
 ),
     preferred = list(),
     question = NULL
