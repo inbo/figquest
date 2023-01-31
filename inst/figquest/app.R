@@ -12,6 +12,19 @@ max_interpretation <- 4
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   tags$head(
+    tags$script('
+        var dimension = [0, 0];
+        $(document).on("shiny:connected", function(e) {
+            dimension[0] = window.innerWidth;
+            dimension[1] = window.innerHeight;
+            Shiny.onInputChange("dimension", dimension);
+        });
+        $(window).resize(function(e) {
+            dimension[0] = window.innerWidth;
+            dimension[1] = window.innerHeight;
+            Shiny.onInputChange("dimension", dimension);
+        });
+    '),
     tags$link(rel = "stylesheet", type = "text/css", href = "inbo_report.css")
   ),
   tabsetPanel(
@@ -500,7 +513,8 @@ interpreteren ten opzichte van het referentiejaar 2000?
       )
       data$design |>
         mutate(
-          answer = data$answer, session = session$token, timestamp = Sys.time()
+          answer = data$answer, session = session$token, timestamp = Sys.time(),
+          width = input$dimension[1], height = input$dimension[2]
         ) |>
         select(-matches("_id$")) |>
         write_vc(
@@ -550,7 +564,8 @@ interpreteren ten opzichte van het referentiejaar 2000?
         input$colourblind,
         levels = c("ja", "nee", "wil ik liever niet vertellen"),
         labels = c("yes", "no", "no answer")
-      )
+      ),
+      width = input$dimension[1], height = input$dimension[2]
     ) |>
       write_vc(
         sprintf("intro_%s", session$token), sorting = c("session", "timestamp"),
@@ -632,6 +647,7 @@ interpreteren ten opzichte van het referentiejaar 2000?
         session = session, inputId = "hidden_tabs", selected = "intermediate"
       )
       bind_rows(data$interpretation) |>
+        mutate(width = input$dimension[1], height = input$dimension[2]) |>
         write_vc(
           sprintf("exam_%s", session$token), root = root,
           sorting = c("session", "timestamp")
