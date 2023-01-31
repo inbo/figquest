@@ -78,8 +78,8 @@ Ditmaal in de stijl waar uw voorkeur naar uitgaat.",
       fluidRow(
         column(
           radioButtons(
-            "stats", "Hoe vertrouwd voelt u zich met statistiek?", inline = TRUE,
-            selected = character(0),
+            "stats", "Hoe vertrouwd voelt u zich met statistiek?",
+            inline = TRUE, selected = character(0),
             choices = c(
               "niet vertrouwd", "weinig vertrouwd", "vertrouwd",
               "zeer vertrouwd"

@@ -1,3 +1,8 @@
+# figquest 0.1.1
+
+* Tweak styling of the app.
+* Store screen dimensions of the app.
+
 # figquest 0.1.0
 
 * Store the data on the local file system.
