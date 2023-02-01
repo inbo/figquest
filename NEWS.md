@@ -1,6 +1,7 @@
 # figquest 0.1.2
 
 * Bugfix in app.
+* Add `import_app_data()`.
 
 # figquest 0.1.1
 
