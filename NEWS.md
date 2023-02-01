@@ -1,3 +1,7 @@
+# figquest 0.1.2
+
+* Bugfix in app.
+
 # figquest 0.1.1
 
 * Tweak styling of the app.
