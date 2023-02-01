@@ -651,6 +651,12 @@ interpreteren ten opzichte van het referentiejaar 2000?
       updateTabsetPanel(
         session = session, inputId = "hidden_tabs", selected = "intermediate"
       )
+      if (is_git2rdata(sprintf("exam_%s", session$token), root = root)) {
+        sprintf("exam_%s", session$token) |>
+          read_vc(root = root) |>
+          list() |>
+          c(data$interpretation) -> data$interpretation
+      }
       bind_rows(data$interpretation) |>
         mutate(width = input$dimension[1], height = input$dimension[2]) |>
         write_vc(
