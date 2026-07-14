@@ -15,4 +15,4 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: inbo/actions/check_pkg@1cb9c04524e14ecbfabbd1303470b75d47dd2de2 # v2
+      - uses: inbo/actions/check_pkg@v2
